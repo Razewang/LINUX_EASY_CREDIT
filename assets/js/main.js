@@ -69,8 +69,8 @@ function selectAmount(amount) {
         }
     });
 
-    // 清空自定义输入
-    document.getElementById('customAmount').value = '';
+    // 同步金额到输入框
+    document.getElementById('customAmount').value = amount.toFixed(2);
 }
 
 /**
