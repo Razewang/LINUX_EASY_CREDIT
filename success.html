@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付成功 - 感谢您的支持</title>
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <style>
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: scaleIn 0.5s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+
+        .success-icon svg {
+            width: 50px;
+            height: 50px;
+            stroke: white;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: drawCheck 0.8s ease 0.3s forwards;
+        }
+
+        @keyframes drawCheck {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        .success-title {
+            font-size: 24px;
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .success-desc {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .order-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .order-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .order-label {
+            color: #666;
+        }
+
+        .order-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .order-amount {
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .back-btn {
+            width: 100%;
+            padding: 15px;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .loading-container {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        .loading-text {
+            color: #666;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="reward-card">
+            <!-- 加载状态 -->
+            <div id="loadingState" class="loading-container">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">正在查询支付结果...</div>
+            </div>
+
+            <!-- 成功状态 -->
+            <div id="successState" style="display: none;">
+                <div class="success-icon">
+                    <svg viewBox="0 0 52 52">
+                        <polyline points="14,26 22,34 38,18"/>
+                    </svg>
+                </div>
+
+                <h2 class="success-title">支付成功</h2>
+                <p class="success-desc">感谢您的支持，您的鼓励是我继续创作的动力！</p>
+
+                <div class="order-info">
+                    <div class="order-item">
+                        <span class="order-label">订单号</span>
+                        <span class="order-value" id="orderNo">-</span>
+                    </div>
+                    <div class="order-item">
+                        <span class="order-label">支付金额</span>
+                        <span class="order-value order-amount" id="orderAmount">¥0.00</span>
+                    </div>
+                    <div class="order-item">
+                        <span class="order-label">支付时间</span>
+                        <span class="order-value" id="payTime">-</span>
+                    </div>
+                    <div class="order-item" id="messageItem" style="display: none;">
+                        <span class="order-label">您的留言</span>
+                        <span class="order-value" id="orderMessage">-</span>
+                    </div>
+                </div>
+
+                <button class="back-btn" onclick="location.href='index.html'">
+                    继续支持
+                </button>
+            </div>
+
+            <!-- 失败或待支付状态 -->
+            <div id="pendingState" style="display: none;">
+                <div class="header">
+                    <h1>⏳ 等待支付</h1>
+                    <p>订单尚未完成支付</p>
+                </div>
+
+                <div class="order-info">
+                    <div class="order-item">
+                        <span class="order-label">订单号</span>
+                        <span class="order-value" id="pendingOrderNo">-</span>
+                    </div>
+                    <div class="order-item">
+                        <span class="order-label">订单金额</span>
+                        <span class="order-value order-amount" id="pendingAmount">¥0.00</span>
+                    </div>
+                </div>
+
+                <button class="submit-btn" onclick="location.href='index.html'" style="margin-top: 20px;">
+                    返回首页
+                </button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>使用 <a href="https://credit.linux.do" target="_blank">Linux.do Credit</a> 提供支付服务</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = './api';
+
+        // 页面加载时查询订单状态
+        document.addEventListener('DOMContentLoaded', function() {
+            checkOrderStatus();
+        });
+
+        async function checkOrderStatus() {
+            // 从 localStorage 获取订单号
+            const orderNo = localStorage.getItem('current_order');
+
+            if (!orderNo) {
+                showPendingState();
+                return;
+            }
+
+            try {
+                // 查询订单状态
+                const response = await fetch(`${API_BASE_URL}/query_order.php?order_no=${orderNo}`);
+                const result = await response.json();
+
+                if (result.code === 200) {
+                    const order = result.data;
+
+                    if (order.status === 1) {
+                        // 支付成功
+                        showSuccessState(order);
+                        // 清除订单号
+                        localStorage.removeItem('current_order');
+                    } else {
+                        // 待支付，继续轮询
+                        setTimeout(checkOrderStatus, 2000);
+                    }
+                } else {
+                    showPendingState();
+                }
+            } catch (error) {
+                console.error('查询订单失败:', error);
+                showPendingState();
+            }
+        }
+
+        function showSuccessState(order) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('successState').style.display = 'block';
+
+            document.getElementById('orderNo').textContent = order.order_no;
+            document.getElementById('orderAmount').textContent = `¥${parseFloat(order.amount).toFixed(2)}`;
+            document.getElementById('payTime').textContent = order.pay_time || '-';
+
+            if (order.message) {
+                document.getElementById('messageItem').style.display = 'flex';
+                document.getElementById('orderMessage').textContent = order.message;
+            }
+        }
+
+        function showPendingState() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('pendingState').style.display = 'block';
+
+            const orderNo = localStorage.getItem('current_order');
+            if (orderNo) {
+                document.getElementById('pendingOrderNo').textContent = orderNo;
+            }
+        }
+    </script>
+</body>
+</html>

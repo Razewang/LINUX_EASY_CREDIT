@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打赏支持 - 感谢您的支持</title>
+    <meta name="description" content="感谢您的支持，每一份打赏都是对创作者的鼓励">
+    <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="reward-card">
+            <!-- 错误提示 -->
+            <div id="errorMessage" class="error-message"></div>
+
+            <!-- 头部 -->
+            <div class="header">
+                <h1>💝 支持作者</h1>
+                <p>您的支持是我创作的最大动力</p>
+            </div>
+
+            <!-- 金额选择区域 -->
+            <div class="amount-section">
+                <div class="section-title">选择金额</div>
+
+                <!-- 预设金额按钮 -->
+                <div id="presetAmounts" class="preset-amounts">
+                    <!-- 通过 JavaScript 动态生成 -->
+                </div>
+
+                <!-- 自定义金额输入 -->
+                <div class="custom-amount">
+                    <span class="currency-symbol">¥</span>
+                    <input
+                        type="number"
+                        id="customAmount"
+                        class="amount-input"
+                        placeholder="输入自定义金额"
+                        step="0.01"
+                        min="0.01"
+                        max="9999.99"
+                    >
+                </div>
+            </div>
+
+            <!-- 留言区域 -->
+            <div class="message-section">
+                <div class="section-title">留言（可选）</div>
+                <textarea
+                    id="rewardMessage"
+                    class="message-input"
+                    placeholder="说点什么吧...（最多200字）"
+                    maxlength="200"
+                ></textarea>
+            </div>
+
+            <!-- 提交按钮 -->
+            <button id="submitBtn" class="submit-btn">
+                <span class="btn-text">立即支持</span>
+                <div class="spinner"></div>
+            </button>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            <p>使用 <a href="https://credit.linux.do" target="_blank">Linux.do Credit</a> 提供支付服务</p>
+        </div>
+    </div>
+
+    <script src="./assets/js/main.js"></script>
+</body>
+</html>
