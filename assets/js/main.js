@@ -100,10 +100,10 @@ function showError(message) {
 function setSubmitButtonLoading(loading) {
     const btn = document.getElementById('submitBtn');
     if (loading) {
-        btn.classList.add('loading');
+        btn.classList.add('btn-loading');
         btn.disabled = true;
     } else {
-        btn.classList.remove('loading');
+        btn.classList.remove('btn-loading');
         btn.disabled = false;
     }
 }

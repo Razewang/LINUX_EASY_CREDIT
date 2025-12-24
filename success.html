@@ -3,138 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>支付成功 - 感谢您的支持</title>
+    <title>支付成功</title>
     <link rel="stylesheet" href="./assets/css/style.css">
-    <style>
-        .success-icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: scaleIn 0.5s ease;
-        }
-
-        @keyframes scaleIn {
-            from {
-                transform: scale(0);
-            }
-            to {
-                transform: scale(1);
-            }
-        }
-
-        .success-icon svg {
-            width: 50px;
-            height: 50px;
-            stroke: white;
-            stroke-width: 3;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            fill: none;
-            stroke-dasharray: 100;
-            stroke-dashoffset: 100;
-            animation: drawCheck 0.8s ease 0.3s forwards;
-        }
-
-        @keyframes drawCheck {
-            to {
-                stroke-dashoffset: 0;
-            }
-        }
-
-        .success-title {
-            font-size: 24px;
-            color: #333;
-            text-align: center;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .success-desc {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .order-info {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .order-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-            font-size: 14px;
-        }
-
-        .order-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .order-label {
-            color: #666;
-        }
-
-        .order-value {
-            color: #333;
-            font-weight: 600;
-        }
-
-        .order-amount {
-            color: #667eea;
-            font-size: 18px;
-        }
-
-        .back-btn {
-            width: 100%;
-            padding: 15px;
-            background: white;
-            color: #667eea;
-            border: 2px solid #667eea;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .back-btn:hover {
-            background: #667eea;
-            color: white;
-        }
-
-        .loading-container {
-            text-align: center;
-            padding: 40px 0;
-        }
-
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #e0e0e0;
-            border-top-color: #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        .loading-text {
-            color: #666;
-            font-size: 16px;
-        }
-    </style>
 </head>
 <body>
     <div class="container">
-        <div class="reward-card">
+        <div class="reward-card fade-in">
             <!-- 加载状态 -->
             <div id="loadingState" class="loading-container">
                 <div class="loading-spinner"></div>
@@ -143,14 +17,12 @@
 
             <!-- 成功状态 -->
             <div id="successState" style="display: none;">
-                <div class="success-icon">
-                    <svg viewBox="0 0 52 52">
-                        <polyline points="14,26 22,34 38,18"/>
-                    </svg>
-                </div>
+                <div class="status-icon success">✓</div>
 
-                <h2 class="success-title">支付成功</h2>
-                <p class="success-desc">感谢您的支持，您的鼓励是我继续创作的动力！</p>
+                <div class="header">
+                    <h1>支付成功</h1>
+                    <p>感谢您的支持，您的鼓励是我继续创作的动力！</p>
+                </div>
 
                 <div class="order-info">
                     <div class="order-item">
@@ -159,7 +31,7 @@
                     </div>
                     <div class="order-item">
                         <span class="order-label">支付金额</span>
-                        <span class="order-value order-amount" id="orderAmount">¥0.00</span>
+                        <span class="order-value order-amount" id="orderAmount">LDC 0.00</span>
                     </div>
                     <div class="order-item">
                         <span class="order-label">支付时间</span>
@@ -171,15 +43,19 @@
                     </div>
                 </div>
 
-                <button class="back-btn" onclick="location.href='index.html'">
-                    继续支持
-                </button>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="location.href='index.html'">
+                        <span class="btn-text">继续支持</span>
+                    </button>
+                </div>
             </div>
 
-            <!-- 失败或待支付状态 -->
+            <!-- 待支付状态 -->
             <div id="pendingState" style="display: none;">
+                <div class="status-icon pending">⏳</div>
+
                 <div class="header">
-                    <h1>⏳ 等待支付</h1>
+                    <h1>等待支付</h1>
                     <p>订单尚未完成支付</p>
                 </div>
 
@@ -190,18 +66,23 @@
                     </div>
                     <div class="order-item">
                         <span class="order-label">订单金额</span>
-                        <span class="order-value order-amount" id="pendingAmount">¥0.00</span>
+                        <span class="order-value order-amount" id="pendingAmount">LDC 0.00</span>
                     </div>
                 </div>
 
-                <button class="submit-btn" onclick="location.href='index.html'" style="margin-top: 20px;">
-                    返回首页
-                </button>
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="location.href='index.html'">
+                        <span class="btn-text">返回首页</span>
+                    </button>
+                </div>
             </div>
         </div>
 
         <div class="footer">
-            <p>使用 <a href="https://credit.linux.do" target="_blank">Linux.do Credit</a> 提供支付服务</p>
+            <div class="footer-text">
+                <span class="footer-icon">🔒</span>
+                由 <a href="https://credit.linux.do" target="_blank">LINUX DO CREDIT</a> 提供安全认证
+            </div>
         </div>
     </div>
 
@@ -253,7 +134,7 @@
             document.getElementById('successState').style.display = 'block';
 
             document.getElementById('orderNo').textContent = order.order_no;
-            document.getElementById('orderAmount').textContent = `¥${parseFloat(order.amount).toFixed(2)}`;
+            document.getElementById('orderAmount').textContent = `LDC ${parseFloat(order.amount).toFixed(2)}`;
             document.getElementById('payTime').textContent = order.pay_time || '-';
 
             if (order.message) {

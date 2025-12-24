@@ -3,25 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>打赏支持 - 感谢您的支持</title>
-    <meta name="description" content="感谢您的支持，每一份打赏都是对创作者的鼓励">
+    <title>打赏支持</title>
+    <meta name="description" content="感谢您的支持，每一份打赏都是对创作的鼓励">
     <link rel="stylesheet" href="./assets/css/style.css">
 </head>
 <body>
     <div class="container">
-        <div class="reward-card">
+        <div class="reward-card fade-in">
             <!-- 错误提示 -->
             <div id="errorMessage" class="error-message"></div>
 
             <!-- 头部 -->
             <div class="header">
-                <h1>💝 支持作者</h1>
-                <p>您的支持是我创作的最大动力</p>
+                <div class="header-icon">📋</div>
+                <h1>积分流转信息</h1>
+                <p>请仔细填写并核对接收方的信息和要转移的积分数量</p>
             </div>
 
             <!-- 金额选择区域 -->
-            <div class="amount-section">
-                <div class="section-title">选择金额</div>
+            <div class="form-section">
+                <div class="section-title">
+                    积分数量
+                    <span class="required">*</span>
+                </div>
 
                 <!-- 预设金额按钮 -->
                 <div id="presetAmounts" class="preset-amounts">
@@ -29,41 +33,50 @@
                 </div>
 
                 <!-- 自定义金额输入 -->
-                <div class="custom-amount">
-                    <span class="currency-symbol">¥</span>
+                <div class="input-wrapper">
+                    <span class="input-prefix">LDC</span>
                     <input
                         type="number"
                         id="customAmount"
-                        class="amount-input"
-                        placeholder="输入自定义金额"
+                        class="form-input with-prefix"
+                        placeholder="0.00"
                         step="0.01"
                         min="0.01"
                         max="9999.99"
                     >
                 </div>
+                <div class="form-hint">请输入要转移的积分数量，支持最多两位小数</div>
             </div>
 
             <!-- 留言区域 -->
-            <div class="message-section">
-                <div class="section-title">留言（可选）</div>
+            <div class="form-section">
+                <div class="section-title">备注信息</div>
                 <textarea
                     id="rewardMessage"
-                    class="message-input"
-                    placeholder="说点什么吧...（最多200字）"
+                    class="form-textarea"
+                    placeholder="添加备注（可选）"
                     maxlength="200"
                 ></textarea>
+                <div class="form-hint">最多 200 个字符，用于记录用途，可选</div>
             </div>
 
-            <!-- 提交按钮 -->
-            <button id="submitBtn" class="submit-btn">
-                <span class="btn-text">立即支持</span>
-                <div class="spinner"></div>
-            </button>
+            <!-- 按钮组 -->
+            <div class="button-group">
+                <button class="btn btn-secondary" onclick="window.history.back()">
+                    <span class="btn-text">取消</span>
+                </button>
+                <button id="submitBtn" class="btn btn-primary">
+                    <span class="btn-text">下一步</span>
+                </button>
+            </div>
         </div>
 
         <!-- 页脚 -->
         <div class="footer">
-            <p>使用 <a href="https://credit.linux.do" target="_blank">Linux.do Credit</a> 提供支付服务</p>
+            <div class="footer-text">
+                <span class="footer-icon">🔒</span>
+                由 <a href="https://credit.linux.do" target="_blank">LINUX DO CREDIT</a> 提供安全认证
+            </div>
         </div>
     </div>
 

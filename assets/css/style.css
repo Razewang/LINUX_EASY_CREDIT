@@ -1,3 +1,38 @@
+/*
+ * 打赏网站样式 - Linux.do Credit 风格
+ * 基于 Linux.do Credit 原版 UI 设计
+ */
+
+/* ===== 颜色变量 ===== */
+:root {
+    /* 背景色 */
+    --bg-primary: #0a0a0a;           /* 主背景 - 纯黑 */
+    --bg-secondary: #1a1a1a;         /* 卡片背景 - 深灰 */
+    --bg-tertiary: #252525;          /* 输入框背景 */
+    --bg-hover: #2a2a2a;             /* 悬停状态 */
+
+    /* 文字颜色 */
+    --text-primary: #ffffff;         /* 主要文字 - 白色 */
+    --text-secondary: #a0a0a0;       /* 次要文字 - 浅灰 */
+    --text-muted: #666666;           /* 辅助文字 - 中灰 */
+
+    /* 强调色 */
+    --accent-primary: #f5f5f5;       /* 主按钮背景 - 浅色 */
+    --accent-text: #0a0a0a;          /* 主按钮文字 - 深色 */
+    --accent-red: #ef4444;           /* 必填标记 - 红色 */
+
+    /* 边框 */
+    --border-color: #333333;         /* 边框颜色 */
+    --border-radius: 12px;           /* 统一圆角 */
+    --border-radius-lg: 16px;        /* 大圆角 */
+
+    /* 阴影 */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* ===== 基础重置 ===== */
 * {
     margin: 0;
     padding: 0;
@@ -5,32 +40,464 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, "Noto Sans", sans-serif,
+                 "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    background: var(--bg-primary);
+    color: var(--text-primary);
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 20px;
+    line-height: 1.6;
 }
 
+/* ===== 容器 ===== */
 .container {
-    max-width: 500px;
+    max-width: 480px;
     width: 100%;
 }
 
+/* ===== 卡片样式 ===== */
 .reward-card {
-    background: white;
-    border-radius: 20px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    padding: 40px;
-    animation: fadeIn 0.5s ease;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-lg);
+    padding: 32px 24px;
+    box-shadow: var(--shadow-md);
+}
+
+/* ===== 头部 ===== */
+.header {
+    text-align: center;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.header-icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 16px;
+    background: var(--bg-tertiary);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.header p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* ===== 区块标题 ===== */
+.section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.section-title .required {
+    color: var(--accent-red);
+    font-size: 16px;
+}
+
+/* ===== 表单区域 ===== */
+.form-section {
+    margin-bottom: 24px;
+}
+
+/* ===== 预设金额按钮 ===== */
+.preset-amounts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.amount-btn {
+    padding: 14px 12px;
+    background: var(--bg-tertiary);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.amount-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-color);
+}
+
+.amount-btn.active {
+    background: var(--accent-primary);
+    color: var(--accent-text);
+    border-color: var(--accent-primary);
+}
+
+/* ===== 输入框 ===== */
+.input-wrapper {
+    position: relative;
+}
+
+.input-prefix {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 16px;
+    font-weight: 500;
+    pointer-events: none;
+}
+
+.form-input {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--bg-tertiary);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    font-size: 16px;
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+
+.form-input.with-prefix {
+    padding-left: 40px;
+}
+
+.form-input:focus {
+    outline: none;
+    background: var(--bg-hover);
+    border-color: var(--border-color);
+}
+
+.form-input::placeholder {
+    color: var(--text-muted);
+}
+
+/* Textarea */
+.form-textarea {
+    width: 100%;
+    padding: 14px 16px;
+    background: var(--bg-tertiary);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 100px;
+    line-height: 1.6;
+    transition: all 0.2s ease;
+}
+
+.form-textarea:focus {
+    outline: none;
+    background: var(--bg-hover);
+    border-color: var(--border-color);
+}
+
+.form-textarea::placeholder {
+    color: var(--text-muted);
+}
+
+/* ===== 提示文字 ===== */
+.form-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    line-height: 1.5;
+}
+
+/* ===== 错误提示 ===== */
+.error-message {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid var(--accent-red);
+    color: var(--accent-red);
+    padding: 12px 16px;
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    margin-bottom: 20px;
+    display: none;
+}
+
+.error-message.show {
+    display: block;
+    animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+}
+
+/* ===== 按钮组 ===== */
+.button-group {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+}
+
+/* ===== 按钮样式 ===== */
+.btn {
+    flex: 1;
+    padding: 14px 24px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary {
+    background: var(--accent-primary);
+    color: var(--accent-text);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--bg-tertiary);
+    border-color: var(--text-muted);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ===== 加载状态 ===== */
+.btn-loading {
+    pointer-events: none;
+}
+
+.btn-loading .btn-text {
+    opacity: 0;
+}
+
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid transparent;
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ===== 页脚 ===== */
+.footer {
+    text-align: center;
+    margin-top: 24px;
+    padding: 16px;
+}
+
+.footer-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.footer-icon {
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.footer a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.footer a:hover {
+    color: var(--text-primary);
+}
+
+/* ===== 订单信息卡片 ===== */
+.order-info {
+    background: var(--bg-tertiary);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    margin: 20px 0;
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+.order-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.order-value {
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.order-amount {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ===== 状态图标 ===== */
+.status-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 20px;
+    background: var(--bg-tertiary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+}
+
+.status-icon.success {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+}
+
+.status-icon.pending {
+    background: rgba(251, 191, 36, 0.1);
+    color: #fbbf24;
+}
+
+/* ===== 加载动画 ===== */
+.loading-container {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 16px;
+    border: 3px solid var(--bg-tertiary);
+    border-top-color: var(--text-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.loading-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* ===== 响应式设计 ===== */
+@media (max-width: 640px) {
+    body {
+        padding: 16px;
+    }
+
+    .container {
+        max-width: 100%;
+    }
+
+    .reward-card {
+        padding: 24px 20px;
+    }
+
+    .header h1 {
+        font-size: 20px;
+    }
+
+    .preset-amounts {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .amount-btn {
+        padding: 12px 10px;
+        font-size: 15px;
+    }
+
+    .form-input,
+    .form-textarea {
+        font-size: 16px; /* 防止 iOS 自动缩放 */
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
+
+/* ===== 平滑过渡 ===== */
+.fade-in {
+    animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(10px);
     }
     to {
         opacity: 1;
@@ -38,227 +505,13 @@ body {
     }
 }
 
-.header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.header h1 {
-    font-size: 28px;
-    color: #333;
-    margin-bottom: 10px;
-}
-
-.header p {
-    color: #666;
-    font-size: 14px;
-}
-
-.amount-section {
-    margin-bottom: 30px;
-}
-
-.section-title {
-    font-size: 16px;
-    color: #333;
-    margin-bottom: 15px;
-    font-weight: 600;
-}
-
-.preset-amounts {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.amount-btn {
-    padding: 15px;
-    border: 2px solid #e0e0e0;
-    background: white;
-    border-radius: 10px;
-    font-size: 18px;
-    font-weight: 600;
-    color: #333;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.amount-btn:hover {
-    border-color: #667eea;
-    color: #667eea;
-    transform: translateY(-2px);
-}
-
-.amount-btn.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-color: transparent;
-    color: white;
-}
-
-.custom-amount {
-    position: relative;
-}
-
-.currency-symbol {
-    position: absolute;
-    left: 15px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 20px;
-    color: #666;
-    font-weight: 600;
-}
-
-.amount-input {
-    width: 100%;
-    padding: 15px 15px 15px 40px;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    font-size: 20px;
-    font-weight: 600;
-    transition: all 0.3s ease;
-}
-
-.amount-input:focus {
-    outline: none;
-    border-color: #667eea;
-}
-
-.message-section {
-    margin-bottom: 30px;
-}
-
-.message-input {
-    width: 100%;
-    padding: 15px;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    font-size: 14px;
-    resize: vertical;
-    min-height: 100px;
-    font-family: inherit;
-    transition: all 0.3s ease;
-}
-
-.message-input:focus {
-    outline: none;
-    border-color: #667eea;
-}
-
-.submit-btn {
-    width: 100%;
-    padding: 18px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 18px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-.submit-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-}
-
-.submit-btn:active {
-    transform: translateY(0);
-}
-
-.submit-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.submit-btn .spinner {
-    display: none;
-    width: 20px;
-    height: 20px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto;
-}
-
-.submit-btn.loading .spinner {
-    display: block;
-}
-
-.submit-btn.loading .btn-text {
-    display: none;
-}
-
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
-}
-
-.error-message {
-    background: #fee;
-    color: #c33;
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    font-size: 14px;
-    display: none;
-}
-
-.error-message.show {
-    display: block;
-    animation: shake 0.5s ease;
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-    20%, 40%, 60%, 80% { transform: translateX(5px); }
-}
-
-.footer {
-    text-align: center;
-    margin-top: 20px;
-    color: white;
-    font-size: 14px;
-}
-
-.footer a {
-    color: white;
-    text-decoration: none;
-    opacity: 0.8;
-    transition: opacity 0.3s ease;
-}
-
-.footer a:hover {
-    opacity: 1;
-}
-
-/* 响应式设计 */
-@media (max-width: 600px) {
-    .reward-card {
-        padding: 30px 20px;
-    }
-
-    .header h1 {
-        font-size: 24px;
-    }
-
-    .preset-amounts {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .amount-btn {
-        padding: 12px;
-        font-size: 16px;
-    }
-
-    .amount-input {
-        font-size: 18px;
+/* ===== 无障碍优化 ===== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
     }
 }
