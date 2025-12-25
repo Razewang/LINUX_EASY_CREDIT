@@ -2,10 +2,46 @@
 /**
  * Linux.do Credit 支付配置文件模板
  *
+ * ========================================
+ * 🚀 最简启动流程（3 步）
+ * ========================================
+ *
+ * 第 1 步：配置文件
+ * -----------------
+ * cp config/config.example.php config/config.php
+ * nano config/config.php
+ *
+ * 填写必填项：
+ * - pid: 您的 Client ID（从 Linux.do Credit 获取）
+ * - key: 您的 Client Secret
+ * - notify_url: http://您的域名/api/notify.php
+ * - return_url: http://您的域名/success.html
+ *
+ * 第 2 步：启动服务器
+ * -------------------
+ * cd /path/to/project
+ * php -S 0.0.0.0:80
+ *
+ * 或后台运行：
+ * nohup php -S 0.0.0.0:80 > logs/server.log 2>&1 &
+ *
+ * 第 3 步：访问网站
+ * -----------------
+ * http://您的域名/index.html
+ *
+ * ========================================
+ * 📝 配置说明
+ * ========================================
+ *
  * 使用说明：
  * 1. 复制本文件并重命名为 config.php
  * 2. 填写您的实际配置信息
  * 3. 确保 config.php 已在 .gitignore 中排除，不要提交到 Git
+ *
+ * 域名配置示例：
+ * - 主域名: http://yourdomain.com/api/notify.php
+ * - 子域名: http://tip.yourdomain.com/api/notify.php
+ * - 带端口: http://yourdomain.com:8080/api/notify.php
  */
 
 return [
