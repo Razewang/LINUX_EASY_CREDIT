@@ -84,8 +84,23 @@ try {
 
         $helper->log("订单支付成功: {$outTradeNo}, 金额: {$money}");
 
-        // 这里可以添加额外的业务逻辑
-        // 例如：发送邮件通知、更新数据库等
+        // ===== 第三方集成：发送到 Notion 和 Webhook =====
+        try {
+            require_once __DIR__ . '/IntegrationHelper.php';
+            $integrationHelper = new IntegrationHelper($config, $helper);
+            $integrationResults = $integrationHelper->sendToIntegrations($orderData);
+
+            // 记录集成结果
+            if ($integrationResults['notion']['enabled']) {
+                $helper->log("Notion 集成: " . $integrationResults['notion']['message']);
+            }
+            if ($integrationResults['webhook']['enabled']) {
+                $helper->log("Webhook 集成: " . $integrationResults['webhook']['message']);
+            }
+        } catch (Exception $e) {
+            // 集成失败不影响支付流程，只记录日志
+            $helper->log("第三方集成异常: " . $e->getMessage(), 'warning');
+        }
 
         echo 'success';
     } else {

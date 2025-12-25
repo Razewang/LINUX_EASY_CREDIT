@@ -114,4 +114,62 @@ return [
         // 字符集
         'charset' => 'utf8mb4',
     ],
+
+    // Notion 集成配置（可选）
+    // 支付成功后自动创建 Notion 数据库记录
+    'notion' => [
+        // 是否启用 Notion 集成
+        'enabled' => false,
+
+        // Notion API 密钥
+        // 获取方式：https://www.notion.so/my-integrations
+        // 创建 Internal Integration，复制 API Key
+        'api_key' => '',
+
+        // Notion 数据库 ID
+        // 获取方式：打开 Notion 数据库，点击右上角"..."-> "Copy link"
+        // 链接格式：https://www.notion.so/{workspace}/{database_id}?v=...
+        // 提取其中的 database_id（32位字符串）
+        'database_id' => '',
+
+        // Notion API 版本
+        'api_version' => '2022-06-28',
+
+        // 数据库属性映射（根据你的 Notion 数据库结构配置）
+        // 键名必须与 Notion 数据库中的属性名完全一致
+        'properties' => [
+            'title_field' => '订单号',      // Notion 中的标题字段名
+            'amount_field' => '金额',        // 金额字段名（Number类型）
+            'message_field' => '留言',       // 留言字段名（Rich Text类型）
+            'status_field' => '状态',        // 状态字段名（Select类型）
+            'pay_time_field' => '支付时间',  // 支付时间字段名（Date类型）
+        ],
+    ],
+
+    // Webhook 集成配置（可选）
+    // 支付成功后发送 POST 请求到指定 URL
+    'webhook' => [
+        // 是否启用 Webhook
+        'enabled' => false,
+
+        // Webhook URL（接收支付通知的完整 URL）
+        'url' => '',
+
+        // 请求方法（POST 或 GET）
+        'method' => 'POST',
+
+        // 自定义请求头（可选）
+        'headers' => [
+            'Content-Type' => 'application/json',
+            // 可以添加自定义认证头
+            // 'Authorization' => 'Bearer YOUR_TOKEN',
+            // 'X-Custom-Header' => 'value',
+        ],
+
+        // 请求超时时间（秒）
+        'timeout' => 10,
+
+        // 失败重试次数
+        'retry' => 3,
+    ],
 ];
