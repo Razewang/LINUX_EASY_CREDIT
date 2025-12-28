@@ -7,20 +7,20 @@
   "rewrites": [
     {
       "source": "/api/create_order.php",
-      "destination": "/api/create-order"
+      "destination": "/vercel-api/create-order"
     },
     {
       "source": "/api/query_order.php",
-      "destination": "/api/query-order"
+      "destination": "/vercel-api/query-order"
     },
     {
       "source": "/api/notify.php",
-      "destination": "/api/notify"
+      "destination": "/vercel-api/notify"
     }
   ],
   "headers": [
     {
-      "source": "/api/(.*)",
+      "source": "/vercel-api/(.*)",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
         { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
