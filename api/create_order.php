@@ -67,6 +67,23 @@ try {
     $payParams['sign'] = $helper->createSign($payParams);
     $payParams['sign_type'] = 'MD5';
 
+    // 调试日志：输出签名信息
+    $helper->log("签名调试 - 订单号: {$outTradeNo}");
+    $helper->log("签名调试 - 参数: " . json_encode($payParams, JSON_UNESCAPED_UNICODE));
+
+    // 重新生成签名字符串用于日志（不包含sign和sign_type）
+    $signParams = $payParams;
+    unset($signParams['sign']);
+    unset($signParams['sign_type']);
+    ksort($signParams);
+    $signString = '';
+    foreach ($signParams as $k => $v) {
+        $signString .= $k . '=' . $v . '&';
+    }
+    $signString = rtrim($signString, '&');
+    $helper->log("签名调试 - 待签名字符串: {$signString}{$config['epay']['key']}");
+    $helper->log("签名调试 - 生成的签名: {$payParams['sign']}");
+
     // 构建支付URL
     $payUrl = $config['epay']['gateway'] . '/pay/submit.php';
 
