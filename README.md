@@ -118,6 +118,12 @@ cd LINUX_EASY_CREDIT
 cp config/config.example.php config/config.php
 nano config/config.php  # 填写配置
 
+---
+
+## License
+
+MIT License. See [LICENSE](LICENSE).
+
 # 启动服务器
 php -S 0.0.0.0:8000
 ```
