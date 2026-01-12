@@ -34,12 +34,15 @@ composer.lock
 /node_modules/
 package-lock.json
 
-# Vercel
-.vercel/
-
 # 环境变量
-.env
-.env.local
+.env*
+!.env.example
+
+# Secrets / private keys
+*.pem
+*.key
+*.p12
+*.pfx
 
 # 上传文件（如果有）
 /uploads/
