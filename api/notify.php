@@ -10,8 +10,11 @@ $config = require __DIR__ . '/../config/config.php';
 $helper = new EpayHelper($config['epay']);
 
 try {
-    // 获取回调参数
-    $params = $_GET;
+    // 获取回调参数 (兼容 GET 和 POST)
+    $params = $_POST;
+    if (empty($params)) {
+        $params = $_GET;
+    }
 
     $helper->log("收到回调: " . json_encode($params, JSON_UNESCAPED_UNICODE));
 

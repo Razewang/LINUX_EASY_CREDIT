@@ -102,6 +102,9 @@
     <script>
         const API_BASE_URL = './api';
 
+        let retryCount = 0;
+        const MAX_RETRIES = 30; // 约 1 分钟（2秒一次）
+
         // 页面加载时查询订单状态
         document.addEventListener('DOMContentLoaded', function() {
             checkOrderStatus();
@@ -115,6 +118,13 @@
                 showPendingState();
                 return;
             }
+
+            if (retryCount >= MAX_RETRIES) {
+                showPendingState();
+                return;
+            }
+
+            retryCount++;
 
             try {
                 // 查询订单状态
@@ -138,7 +148,8 @@
                 }
             } catch (error) {
                 console.error('查询订单失败:', error);
-                showPendingState();
+                // 发生错误也继续重试一次，直到达到最大重试次数
+                setTimeout(checkOrderStatus, 2000);
             }
         }
 

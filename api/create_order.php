@@ -53,8 +53,6 @@ try {
     $outTradeNo = $helper->generateOrderNo();
 
     // 构建支付参数
-    // 注意：根据官方文档，notify_url 和 return_url 不参与请求
-    // 这些 URL 在控制台配置，不需要在请求中传递
     // 重要：money 必须格式化为固定两位小数的字符串，否则签名会失败
     $payParams = [
         'pid' => $config['epay']['pid'],
@@ -62,8 +60,15 @@ try {
         'out_trade_no' => $outTradeNo,
         'name' => '打赏支持' . ($message ? '：' . mb_substr($message, 0, 20) : ''),
         'money' => number_format($amount, 2, '.', ''),  // 格式化为两位小数: 3 → "3.00"
-        // notify_url 和 return_url 已在控制台配置，不在此传递
     ];
+
+    // 如果配置中设置了 notify_url 和 return_url，则添加到参数中
+    if (!empty($config['epay']['notify_url'])) {
+        $payParams['notify_url'] = $config['epay']['notify_url'];
+    }
+    if (!empty($config['epay']['return_url'])) {
+        $payParams['return_url'] = $config['epay']['return_url'];
+    }
 
     // 生成签名
     $payParams['sign'] = $helper->createSign($payParams);

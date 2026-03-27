@@ -1,29 +1,76 @@
 // 配置信息
 const API_BASE_URL = './api'; // API 基础路径
 
-// 预设金额
-const PRESET_AMOUNTS = [1, 5, 10, 20, 50, 100];
+// 默认配置（如果 API 加载失败则使用）
+let config = {
+    title: '打赏支持',
+    description: '感谢您的支持，每一份打赏都是对创作的鼓励',
+    min_amount: 0.01,
+    max_amount: 9999.99,
+    preset_amounts: [1, 5, 10, 20, 50, 100]
+};
 
 // 当前选中的金额
 let selectedAmount = 0;
 
 // 页面加载完成后初始化
-document.addEventListener('DOMContentLoaded', function() {
-    initPresetAmounts();
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadConfig();
+    initUI();
     initEventListeners();
 });
+
+/**
+ * 加载配置
+ */
+async function loadConfig() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/get_config.php`);
+        const result = await response.json();
+        if (result.code === 200) {
+            config = result.data;
+        }
+    } catch (error) {
+        console.error('加载配置失败:', error);
+    }
+}
+
+/**
+ * 初始化 UI
+ */
+function initUI() {
+    // 设置标题和描述
+    if (config.title) document.title = config.title;
+    const titleElement = document.querySelector('.header h1');
+    if (titleElement) titleElement.textContent = config.title;
+    const descElement = document.querySelector('.header p');
+    if (descElement) descElement.textContent = config.description;
+
+    // 设置输入框限制
+    const customInput = document.getElementById('customAmount');
+    if (customInput) {
+        customInput.min = config.min_amount;
+        customInput.max = config.max_amount;
+    }
+
+    // 初始化预设按钮
+    initPresetAmounts();
+}
 
 /**
  * 初始化预设金额按钮
  */
 function initPresetAmounts() {
     const container = document.getElementById('presetAmounts');
+    if (!container) return;
     container.innerHTML = '';
 
-    PRESET_AMOUNTS.forEach(amount => {
+    const presetAmounts = config.preset_amounts || [1, 5, 10, 20, 50, 100];
+
+    presetAmounts.forEach(amount => {
         const button = document.createElement('button');
         button.className = 'amount-btn';
-        button.textContent = `¥${amount}`;
+        button.textContent = `${amount} LDC`;
         button.dataset.amount = amount;
         button.onclick = function() {
             selectAmount(amount);
@@ -122,13 +169,13 @@ async function handleSubmit() {
         return;
     }
 
-    if (amount < 0.01) {
-        showError('打赏金额不能小于 0.01 元');
+    if (amount < config.min_amount) {
+        showError(`打赏金额不能小于 ${config.min_amount} LDC`);
         return;
     }
 
-    if (amount > 9999.99) {
-        showError('打赏金额不能大于 9999.99 元');
+    if (amount > config.max_amount) {
+        showError(`打赏金额不能大于 ${config.max_amount} LDC`);
         return;
     }
 
