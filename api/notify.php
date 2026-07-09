@@ -87,7 +87,7 @@ try {
         $orderData['status'] = 1;
         $orderData['trade_no'] = $tradeNo;
         $orderData['pay_time'] = date('Y-m-d H:i:s');
-        file_put_contents($orderFile, json_encode($orderData, JSON_UNESCAPED_UNICODE));
+        file_put_contents($orderFile, json_encode($orderData, JSON_UNESCAPED_UNICODE), LOCK_EX);
 
         $helper->log("订单支付成功: {$outTradeNo}, 金额: {$money}");
 

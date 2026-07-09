@@ -8,6 +8,14 @@ mkdir -p /var/www/html/logs
 mkdir -p /var/www/html/logs/orders
 mkdir -p /run/nginx
 
+# 应用 PHP 运行时配置
+cat > /usr/local/etc/php/conf.d/reward-runtime.ini <<EOF
+memory_limit=${PHP_MEMORY_LIMIT:-256M}
+max_execution_time=${PHP_MAX_EXECUTION_TIME:-300}
+upload_max_filesize=${PHP_UPLOAD_MAX_FILESIZE:-10M}
+post_max_size=${PHP_POST_MAX_SIZE:-10M}
+EOF
+
 # 设置权限
 chown -R www-data:www-data /var/www/html/logs
 chmod -R 777 /var/www/html/logs

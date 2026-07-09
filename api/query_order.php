@@ -74,7 +74,7 @@ try {
                 $orderData['status'] = 1;
                 $orderData['pay_time'] = date('Y-m-d H:i:s');
                 $orderData['trade_no'] = isset($response['trade_no']) ? $response['trade_no'] : '';
-                file_put_contents($orderFile, json_encode($orderData, JSON_UNESCAPED_UNICODE));
+                file_put_contents($orderFile, json_encode($orderData, JSON_UNESCAPED_UNICODE), LOCK_EX);
 
                 $helper->jsonResponse(200, '查询成功', [
                     'order_no' => $orderData['out_trade_no'],

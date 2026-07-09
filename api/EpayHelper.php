@@ -60,7 +60,14 @@ class EpayHelper
      */
     public function generateOrderNo()
     {
-        return 'RW' . date('YmdHis') . rand(1000, 9999);
+        try {
+            $suffix = strtoupper(bin2hex(random_bytes(4)));
+        } catch (Exception $e) {
+            $suffix = strtoupper(uniqid('', true));
+            $suffix = preg_replace('/[^A-Z0-9]/', '', $suffix);
+        }
+
+        return 'RW' . date('YmdHis') . $suffix;
     }
 
     /**
@@ -129,7 +136,7 @@ class EpayHelper
         $logFile = $logDir . '/' . date('Y-m-d') . '.log';
         $time = date('Y-m-d H:i:s');
         $content = "[{$time}] [{$type}] {$message}\n";
-        file_put_contents($logFile, $content, FILE_APPEND);
+        file_put_contents($logFile, $content, FILE_APPEND | LOCK_EX);
     }
 
     /**
@@ -140,6 +147,10 @@ class EpayHelper
      */
     public function jsonResponse($code, $message, $data = null)
     {
+        if ($code >= 100 && $code <= 599) {
+            http_response_code($code);
+        }
+
         header('Content-Type: application/json; charset=utf-8');
         header('Access-Control-Allow-Origin: *');
         header('Access-Control-Allow-Methods: GET, POST, OPTIONS');

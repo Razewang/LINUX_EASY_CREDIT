@@ -101,6 +101,8 @@
     <script src="./assets/js/theme.js"></script>
     <script>
         const API_BASE_URL = './api';
+        const MAX_POLL_ATTEMPTS = 60;
+        let pollAttempts = 0;
 
         // 页面加载时查询订单状态
         document.addEventListener('DOMContentLoaded', function() {
@@ -130,6 +132,12 @@
                         // 清除订单号
                         localStorage.removeItem('current_order');
                     } else {
+                        pollAttempts += 1;
+                        if (pollAttempts >= MAX_POLL_ATTEMPTS) {
+                            showPendingState();
+                            return;
+                        }
+
                         // 待支付，继续轮询
                         setTimeout(checkOrderStatus, 2000);
                     }

@@ -12,8 +12,11 @@ WORKDIR /var/www/html
 RUN apk add --no-cache \
     nginx \
     curl \
+    curl-dev \
+    oniguruma-dev \
+    $PHPIZE_DEPS \
     bash \
-    && docker-php-ext-install opcache
+    && docker-php-ext-install opcache curl mbstring
 
 # 复制项目文件
 COPY . /var/www/html/
