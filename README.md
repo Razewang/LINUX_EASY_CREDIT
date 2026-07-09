@@ -76,12 +76,6 @@ cd LINUX_EASY_CREDIT
 cp config/config.example.php config/config.php
 nano config/config.php  # 填写配置
 
----
-
-## License
-
-MIT License. See [LICENSE](LICENSE).
-
 # 启动服务器
 php -S 0.0.0.0:8000
 ```
@@ -191,6 +185,12 @@ reward-website/
 
 - **Linux.do Credit 文档**: https://credit.linux.do/docs
 - **GitHub Issues**: https://github.com/Razewang/LINUX_EASY_CREDIT/issues
+
+---
+
+## 📄 License
+
+本项目采用 [MIT License](LICENSE) 开源。
 
 ---
 
