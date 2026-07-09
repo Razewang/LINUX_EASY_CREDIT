@@ -580,4 +580,4 @@ curl "http://localhost/api/notify.php?pid=001&trade_no=xxx&..."
 
 ---
 
-更新时间：2025-12-25
+更新时间：2026-07-09
