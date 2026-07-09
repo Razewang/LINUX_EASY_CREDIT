@@ -628,6 +628,6 @@ gzip_types text/plain text/css text/xml text/javascript application/json applica
 
 ---
 
-**文档版本**: v1.0
-**最后更新**: 2025-12-25
+**文档版本**: v2.0.1
+**最后更新**: 2026-07-09
 **维护者**: Reward Website Project
