@@ -1,6 +1,14 @@
 # 打赏网站项目
 
+[English README](README_EN.md)
+
 基于 Linux.do Credit 的简洁打赏网站。
+
+## 项目声明
+
+这是一个非商业性的开源工具。维护者不收取平台服务费，也不将其作为付费服务运营。
+
+This project is a non-commercial, open-source tool. The maintainer does not charge platform fees or operate it as a paid service.
 
 ## ✨ 功能特性
 
