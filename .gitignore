@@ -32,7 +32,6 @@ composer.lock
 
 # Node.js
 /node_modules/
-package-lock.json
 
 # 环境变量
 .env*
@@ -47,3 +46,4 @@ package-lock.json
 # 上传文件（如果有）
 /uploads/
 /upload/
+.vercel

@@ -1,0 +1,13 @@
+# The PHP/Docker runtime is not used by Vercel. API-compatible rewrites point
+# the public .php paths at the Node.js Functions under api/vercel/.
+api/*.php
+config/
+docker/
+Dockerfile
+docker-compose.yml
+logs/
+
+# Local-only and development artifacts.
+.env*
+node_modules/
+test/

@@ -30,6 +30,7 @@
 
 | 方式 | 难度 | 适用场景 | 需要服务器 |
 |-----|------|---------|-----------|
+| **[Vercel 部署](VERCEL.md)** | ⭐ 简单 | 无服务器托管、快速上线 | ❌ 不需要 |
 | **[Docker 部署](#-docker-部署)** | ⭐⭐ 简单 | 自托管、完整功能 | ✅ 需要 |
 | **[PHP 部署](#-php-手动部署)** | ⭐⭐⭐ 中等 | 传统服务器 | ✅ 需要 |
 
@@ -148,6 +149,22 @@ php -S 0.0.0.0:8000
 - 前端校验/错误提示：`reward-website/assets/js/main.js`
 - 主题切换提示文案：`reward-website/assets/js/theme.js`
 
+### 修改首页主标题和说明
+
+编辑根目录的 `index.html`，找到头部区域：
+
+```html
+<div class="header">
+    <div class="header-icon">📋</div>
+    <h1>积分打赏</h1>
+    <p>请仔细填写并核对接收方的信息和要转移的积分数量</p>
+</div>
+```
+
+- 修改 `<h1>...</h1>` 可更改首页主标题。
+- 修改紧随其后的 `<p>...</p>` 可更改第二行说明文字。
+- 这两项是静态页面文案，Docker、PHP 和 Vercel 部署方式共用同一个 `index.html`。
+
 修改后生效方式：
 
 - **Docker 部署**：`git pull` 后执行 `docker compose up -d --build`
@@ -188,6 +205,7 @@ reward-website/
 
 ## 📚 更多文档
 
+- [VERCEL.md](VERCEL.md) - Vercel 部署指南
 - [DOCKER.md](DOCKER.md) - Docker 部署指南
 - [DEPLOYMENT.md](DEPLOYMENT.md) - 完整部署文档
 - [THEME.md](THEME.md) - UI 主题自定义

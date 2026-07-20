@@ -1,0 +1,15 @@
+{
+  "name": "linux-easy-credit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.4.0"
+  }
+}
