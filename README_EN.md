@@ -30,6 +30,7 @@ Terms such as “payment” and “order” may still appear in the interface or
 
 | Method | Difficulty | Best for | Server required |
 |-----|------|---------|-----------|
+| **[Vercel deployment](VERCEL.md)** | ⭐ Easy | Serverless hosting and quick setup | ❌ No |
 | **[Docker deployment](#-docker-deployment)** | ⭐⭐ Easy | Self-hosting with full functionality | ✅ Yes |
 | **[PHP deployment](#-manual-php-deployment)** | ⭐⭐⭐ Moderate | Traditional web servers | ✅ Yes |
 
@@ -146,6 +147,20 @@ Edit the static pages or front-end scripts directly:
 - Success/waiting page text: `reward-website/success.html`
 - Front-end validation and error messages: `reward-website/assets/js/main.js`
 - Theme-switcher prompt text: `reward-website/assets/js/theme.js`
+
+### Change the home-page heading and description
+
+Edit `index.html` in the project root and locate:
+
+```html
+<div class="header">
+    <div class="header-icon">📋</div>
+    <h1>积分打赏</h1>
+    <p>请仔细填写并核对接收方的信息和要转移的积分数量</p>
+</div>
+```
+
+Change the `<h1>` text for the main heading and the following `<p>` text for the second-line description. Docker, PHP, and Vercel deployments all use this same static file.
 
 Apply changes as follows:
 

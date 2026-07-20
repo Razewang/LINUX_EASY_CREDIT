@@ -1,0 +1,22 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/vercel/*.js": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/create_order.php",
+      "destination": "/api/vercel/create-order"
+    },
+    {
+      "source": "/api/query_order.php",
+      "destination": "/api/vercel/query-order"
+    },
+    {
+      "source": "/api/notify.php",
+      "destination": "/api/vercel/notify"
+    }
+  ]
+}
