@@ -1,20 +1,28 @@
-# Donation Website Project
+# LINUX DO CREDIT Points Transfer Helper
 
 [中文说明](README.md)
 
-A simple donation website built for Linux.do Credit.
+A lightweight points-transfer helper for the [Linux.do](https://linux.do) forum community. It wraps the EasyPay-compatible API provided by LINUX DO CREDIT in a simple web interface, making it easier for forum users to choose a points amount, add a note, and complete a points transfer.
 
-## Project Notice
+## Project Scope and Non-Commercial Notice
 
-This project is a non-commercial, open-source tool. The maintainer does not charge platform fees or operate it as a paid service.
+This project is intended solely for points-related use within the Linux.do forum community. It is an open-source client wrapper for the LINUX DO CREDIT API, not a commercial payment platform offered to the public.
+
+- It only handles forum points within the LINUX DO CREDIT ecosystem; it does not process RMB or any other fiat currency.
+- It does not provide deposits, withdrawals, custody, settlement, exchange, or other financial services.
+- It does not issue points or change their rules. Accounts, authentication, and the actual transfer of points are handled by LINUX DO CREDIT.
+- The maintainer charges no platform fee, service fee, or transaction commission and does not operate this project as a paid business.
+- It is provided as a non-commercial, open-source utility whose purpose is to make forum points transfers easier to use.
+
+Terms such as “payment” and “order” may still appear in the interface or source code because they are field names inherited from the upstream EasyPay-compatible API. Within this project, they refer only to forum points transfers and do not represent fiat payments or commercial payment collection.
 
 ## ✨ Features
 
-- 💰 Custom amounts and preset amount buttons
-- 💬 Optional donation messages
-- 🎨 Official Linux.do Credit dark theme
+- 🔢 Custom points amounts and preset amount buttons
+- 💬 Optional transfer notes
+- 🎨 A dark theme designed for the Linux.do Credit use case
 - 📱 Fully responsive on mobile devices
-- 🔒 Secure signature verification
+- 🔒 LINUX DO CREDIT signature verification and asynchronous notifications
 
 ---
 
@@ -91,13 +99,13 @@ For production, Nginx with PHP-FPM is recommended. See [DEPLOYMENT.md](DEPLOYMEN
 
 ---
 
-## ✅ Test the Payment Flow
+## ✅ Test the Points Transfer Flow
 
 1. Open your website.
-2. Select or enter an amount. Start with **0.01** for testing.
-3. Enter an optional message.
+2. Select or enter a points amount. Start with **0.01** for testing.
+3. Enter an optional transfer note.
 4. Click "Next".
-5. Complete the payment in Linux.do Credit.
+5. Complete authentication and the points transfer in LINUX DO CREDIT.
 6. You will be redirected back to see the result.
 
 ---
@@ -150,8 +158,8 @@ Apply changes as follows:
 
 ```
 reward-website/
-├── index.html              # Donation page
-├── success.html            # Payment-success page
+├── index.html              # Points-transfer page
+├── success.html            # Transfer-result page
 ├── api/
 │   ├── create_order.php    # PHP API
 │   └── ...
