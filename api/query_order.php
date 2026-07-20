@@ -42,63 +42,8 @@ try {
 
     $orderData = json_decode(file_get_contents($orderFile), true);
 
-    // 如果订单已经是已支付状态，直接返回
-    if ($orderData['status'] == 1) {
-        $helper->jsonResponse(200, '查询成功', [
-            'order_no' => $orderData['out_trade_no'],
-            'amount' => $orderData['amount'],
-            'message' => $orderData['message'],
-            'status' => 1,
-            'status_text' => '已支付',
-            'pay_time' => isset($orderData['pay_time']) ? $orderData['pay_time'] : null
-        ]);
-    }
-
-    // 如果订单未支付，查询 Linux.do Credit 的订单状态
-    $queryUrl = $config['epay']['gateway'] . '/api.php?' . http_build_query([
-        'act' => 'order',
-        'pid' => $config['epay']['pid'],
-        'key' => $config['epay']['key'],
-        'out_trade_no' => $orderNo
-    ]);
-
-    $result = $helper->httpGet($queryUrl);
-    $helper->log("查询订单 {$orderNo}: HTTP {$result['code']}, 响应: {$result['response']}");
-
-    if ($result['code'] == 200) {
-        $response = json_decode($result['response'], true);
-
-        if ($response && isset($response['code'])) {
-            if ($response['code'] == 1 && $response['status'] == 1) {
-                // 订单已支付，更新本地状态
-                $orderData['status'] = 1;
-                $orderData['pay_time'] = date('Y-m-d H:i:s');
-                $orderData['trade_no'] = isset($response['trade_no']) ? $response['trade_no'] : '';
-                file_put_contents($orderFile, json_encode($orderData, JSON_UNESCAPED_UNICODE), LOCK_EX);
-
-                $helper->jsonResponse(200, '查询成功', [
-                    'order_no' => $orderData['out_trade_no'],
-                    'amount' => $orderData['amount'],
-                    'message' => $orderData['message'],
-                    'status' => 1,
-                    'status_text' => '已支付',
-                    'pay_time' => $orderData['pay_time']
-                ]);
-            } else {
-                // 订单未支付
-                $helper->jsonResponse(200, '查询成功', [
-                    'order_no' => $orderData['out_trade_no'],
-                    'amount' => $orderData['amount'],
-                    'message' => $orderData['message'],
-                    'status' => 0,
-                    'status_text' => '未支付',
-                    'pay_time' => null
-                ]);
-            }
-        }
-    }
-
-    // 查询失败，返回本地状态
+    // 支付状态以已验签的异步回调为准。不要调用易支付 GET 查询接口：
+    // 该兼容接口要求将 Client Secret 作为 URL 查询参数传递，容易进入代理或访问日志。
     $helper->jsonResponse(200, '查询成功', [
         'order_no' => $orderData['out_trade_no'],
         'amount' => $orderData['amount'],
