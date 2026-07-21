@@ -4,6 +4,7 @@ FROM php:8.3-fpm-alpine
 # 设置维护者信息
 LABEL maintainer="Reward Website Project"
 LABEL description="Linux.do Credit Reward Website"
+LABEL version="2.0.1"
 
 # 设置工作目录
 WORKDIR /var/www/html

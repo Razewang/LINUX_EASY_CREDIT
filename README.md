@@ -2,6 +2,8 @@
 
 [English README](README_EN.md)
 
+当前版本：**v2.0.1**
+
 一个面向 [Linux.do](https://linux.do) 论坛社区的轻量积分流转小工具。它把 LINUX DO CREDIT 提供的易支付兼容接口包装成简洁的网页插件，让论坛用户可以更方便地选择积分数量、填写备注并完成积分流转。
 
 ## 项目定位与非商业声明

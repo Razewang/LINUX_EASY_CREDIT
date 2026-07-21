@@ -45,6 +45,9 @@
  */
 
 return [
+    // 项目版本号
+    'version' => '2.0.1',
+
     // Linux.do Credit API 配置
     'epay' => [
         // 商户ID (Client ID)

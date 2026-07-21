@@ -2,6 +2,8 @@
 
 [中文说明](README.md)
 
+Current version: **v2.0.1**
+
 A lightweight points-transfer helper for the [Linux.do](https://linux.do) forum community. It wraps the EasyPay-compatible API provided by LINUX DO CREDIT in a simple web interface, making it easier for forum users to choose a points amount, add a note, and complete a points transfer.
 
 ## Project Scope and Non-Commercial Notice
