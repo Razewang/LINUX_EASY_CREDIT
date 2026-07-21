@@ -16,6 +16,16 @@ This project is intended solely for points-related use within the Linux.do forum
 
 Terms such as “payment” and “order” may still appear in the interface or source code because they are field names inherited from the upstream EasyPay-compatible API. Within this project, they refer only to forum points transfers and do not represent fiat payments or commercial payment collection.
 
+## Interface Preview
+
+Light theme:
+
+![LINUX DO CREDIT points transfer page in the light theme](assets/screenshots/home-desktop-light.png)
+
+Dark theme:
+
+![LINUX DO CREDIT points transfer page in the dark theme](assets/screenshots/home-desktop-dark.png)
+
 ## ✨ Features
 
 - 🔢 Custom points amounts and preset amount buttons

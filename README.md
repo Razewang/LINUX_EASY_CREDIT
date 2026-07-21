@@ -16,6 +16,16 @@
 
 页面中出现的“支付”“订单”等词汇来自上游易支付兼容接口的字段命名，在本项目语境中均指论坛积分流转，不代表法币支付或商业收款业务。
 
+## 界面预览
+
+浅色主题：
+
+![LINUX DO CREDIT 积分打赏页面浅色主题](assets/screenshots/home-desktop-light.png)
+
+深色主题：
+
+![LINUX DO CREDIT 积分打赏页面深色主题](assets/screenshots/home-desktop-dark.png)
+
 ## ✨ 功能特性
 
 - 🔢 自定义积分数量 + 预设数量快捷按钮
