@@ -43,7 +43,7 @@
 
 至少把必填变量配置到 Production。需要预览部署时，也应配置到 Preview。
 
-如果修改 `MIN_AMOUNT` 或 `MAX_AMOUNT`，还需要同步调整 `assets/js/main.js` 和 `index.html` 中的前端提示与限制。
+首页会通过公开的 `/api/config` 接口自动读取 `MIN_AMOUNT` 和 `MAX_AMOUNT`，并同步更新输入限制与前端校验，无需再手动修改前端文件。该接口只返回金额上下限，不会暴露 Client ID、Client Secret 或其他服务端配置。
 
 ## 4. 配置 LINUX DO CREDIT 回调
 
@@ -76,6 +76,8 @@ package.json            # Vercel Blob 依赖及测试命令
 ```
 
 前端仍请求 `/api/*.php`，Vercel 通过 `vercel.json` 将这些地址改写到 Node.js Functions。因此 PHP/Docker 部署方式保持不变。
+
+首页还会请求 Vercel 专用的公开 `/api/config` 接口来读取金额上下限。PHP/Docker 部署中该接口不存在时，前端会继续使用原有的 `0.01` 和 `9999.99` 默认值，因此现有 PHP/Docker 行为不变。
 
 当前 Vercel 版本覆盖创建订单、异步回调和订单状态查询三项核心流程。PHP 配置中的 Notion、Webhook 和数据库集成不会在 Vercel Functions 中自动启用。
 

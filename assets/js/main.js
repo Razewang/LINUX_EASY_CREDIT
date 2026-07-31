@@ -1,8 +1,17 @@
+import {
+    DEFAULT_AMOUNT_LIMITS,
+    applyAmountLimits,
+    loadAmountLimits
+} from './amount-config.js';
+
 // 配置信息
 const API_BASE_URL = './api'; // API 基础路径
 
 // 预设金额
 const PRESET_AMOUNTS = [1, 5, 10, 20, 50, 100];
+
+// 金额限制。PHP/Docker 部署继续使用默认值，Vercel 部署会从公开配置接口更新。
+let amountLimits = { ...DEFAULT_AMOUNT_LIMITS };
 
 // 当前选中的金额
 let selectedAmount = 0;
@@ -11,7 +20,17 @@ let selectedAmount = 0;
 document.addEventListener('DOMContentLoaded', function() {
     initPresetAmounts();
     initEventListeners();
+    updateAmountLimits();
 });
+
+/**
+ * 从 Vercel 公开配置接口加载金额限制。
+ * PHP/Docker 没有此接口时会保留原有默认限制。
+ */
+async function updateAmountLimits() {
+    amountLimits = await loadAmountLimits();
+    applyAmountLimits(document.getElementById('customAmount'), amountLimits);
+}
 
 /**
  * 初始化预设金额按钮
@@ -122,13 +141,13 @@ async function handleSubmit() {
         return;
     }
 
-    if (amount < 0.01) {
-        showError('打赏金额不能小于 0.01 元');
+    if (amount < amountLimits.minAmount) {
+        showError(`打赏金额不能小于 ${amountLimits.minAmount} 元`);
         return;
     }
 
-    if (amount > 9999.99) {
-        showError('打赏金额不能大于 9999.99 元');
+    if (amount > amountLimits.maxAmount) {
+        showError(`打赏金额不能大于 ${amountLimits.maxAmount} 元`);
         return;
     }
 
