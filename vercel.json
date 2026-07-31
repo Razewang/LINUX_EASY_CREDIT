@@ -7,6 +7,10 @@
   },
   "rewrites": [
     {
+      "source": "/api/config",
+      "destination": "/api/vercel/config"
+    },
+    {
       "source": "/api/create_order.php",
       "destination": "/api/vercel/create-order"
     },
