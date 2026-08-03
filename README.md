@@ -1,169 +1,168 @@
-# LINUX DO CREDIT 积分流转助手
+# LINUX DO CREDIT Points Transfer Helper
 
-[English README](README_EN.md)
+[中文说明](README_CN.md)
 
-当前版本：**v2.0.1**
+Current version: **v2.0.1**
 
-一个面向 [Linux.do](https://linux.do) 论坛社区的轻量积分流转小工具。它把 LINUX DO CREDIT 提供的易支付兼容接口包装成简洁的网页插件，让论坛用户可以更方便地选择积分数量、填写备注并完成积分流转。
+A lightweight points-transfer helper for the [Linux.do](https://linux.do) forum community. It wraps the EasyPay-compatible API provided by LINUX DO CREDIT in a simple web interface, making it easier for forum users to choose a points amount, add a note, and complete a points transfer.
 
-## 项目定位与非商业声明
+## Project Scope and Non-Commercial Notice
 
-本项目仅服务于 Linux.do 论坛社区内的积分使用场景，是对 LINUX DO CREDIT 接口的开源客户端封装，不是面向公众经营的商业支付平台。
+This project is intended solely for points-related use within the Linux.do forum community. It is an open-source client wrapper for the LINUX DO CREDIT API, not a commercial payment platform offered to the public.
 
-- 仅处理 LINUX DO CREDIT 体系内的论坛积分流转，不处理人民币或其他法定货币。
-- 不提供充值、提现、资金托管、清算、兑换或其他金融服务。
-- 项目本身不发行积分，也不改变积分规则；积分账户、认证和实际流转均由 LINUX DO CREDIT 完成。
-- 维护者不收取平台费、服务费或交易抽成，不以本项目开展付费经营。
-- 项目以开源、非商业方式提供，主要用途是降低论坛用户使用积分流转功能的操作门槛。
+- It only handles forum points within the LINUX DO CREDIT ecosystem; it does not process RMB or any other fiat currency.
+- It does not provide deposits, withdrawals, custody, settlement, exchange, or other financial services.
+- It does not issue points or change their rules. Accounts, authentication, and the actual transfer of points are handled by LINUX DO CREDIT.
+- The maintainer charges no platform fee, service fee, or transaction commission and does not operate this project as a paid business.
+- It is provided as a non-commercial, open-source utility whose purpose is to make forum points transfers easier to use.
 
-页面中出现的“支付”“订单”等词汇来自上游易支付兼容接口的字段命名，在本项目语境中均指论坛积分流转，不代表法币支付或商业收款业务。
+Terms such as “payment” and “order” may still appear in the interface or source code because they are field names inherited from the upstream EasyPay-compatible API. Within this project, they refer only to forum points transfers and do not represent fiat payments or commercial payment collection.
 
-## 界面预览
+## Interface Preview
 
-浅色主题：
+Light theme:
 
-![LINUX DO CREDIT 积分打赏页面浅色主题](assets/screenshots/home-desktop-light.png)
+![LINUX DO CREDIT points transfer page in the light theme](assets/screenshots/home-desktop-light.png)
 
-深色主题：
+Dark theme:
 
-![LINUX DO CREDIT 积分打赏页面深色主题](assets/screenshots/home-desktop-dark.png)
+![LINUX DO CREDIT points transfer page in the dark theme](assets/screenshots/home-desktop-dark.png)
 
-## ✨ 功能特性
+## ✨ Features
 
-- 🔢 自定义积分数量 + 预设数量快捷按钮
-- 💬 支持积分流转备注
-- 🎨 适配 Linux.do Credit 使用场景的暗色主题
-- 📱 完美支持移动端
-- 🔒 对接 LINUX DO CREDIT 的签名验证与异步通知
+- 🔢 Custom points amounts and preset amount buttons
+- 💬 Optional transfer notes
+- 🎨 A dark theme designed for the Linux.do Credit use case
+- 📱 Fully responsive on mobile devices
+- 🔒 LINUX DO CREDIT signature verification and asynchronous notifications
 
 ---
 
-## 🚀 选择部署方式
+## 🚀 Choose a Deployment Method
 
-| 方式 | 难度 | 适用场景 | 需要服务器 |
+| Method | Difficulty | Best for | Server required |
 |-----|------|---------|-----------|
-| **[Vercel 部署](VERCEL.md)** | ⭐ 简单 | 无服务器托管、快速上线 | ❌ 不需要 |
-| **[Docker 部署](#-docker-部署)** | ⭐⭐ 简单 | 自托管、完整功能 | ✅ 需要 |
-| **[PHP 部署](#-php-手动部署)** | ⭐⭐⭐ 中等 | 传统服务器 | ✅ 需要 |
+| **[Vercel deployment](VERCEL.md)** | ⭐ Easy | Serverless hosting and quick setup | ❌ No |
+| **[Docker deployment](#-docker-deployment)** | ⭐⭐ Easy | Self-hosting with full functionality | ✅ Yes |
+| **[PHP deployment](#-manual-php-deployment)** | ⭐⭐⭐ Moderate | Traditional web servers | ✅ Yes |
 
 ---
 
+## 🐳 Docker Deployment
 
-## 🐳 Docker 部署
+Recommended for users with a server. This option supports the full feature set, including persistent order storage.
 
-适合有服务器的用户，支持完整功能（订单持久化存储）。
+### Step 1: Get API credentials
 
-### 步骤 1：获取 API 密钥
+Create an application at [credit.linux.do](https://credit.linux.do) and record its credentials.
 
-同上，在 [credit.linux.do](https://credit.linux.do) 创建应用并记录密钥。
-
-### 步骤 2：配置文件
+### Step 2: Configure the project
 
 ```bash
-# 克隆项目
+# Clone the project
 git clone https://github.com/Razewang/LINUX_EASY_CREDIT.git
 cd LINUX_EASY_CREDIT
 
-# 创建配置文件
+# Create the configuration file
 cp config/config.example.php config/config.php
 nano config/config.php
 ```
 
-填写配置：
+Fill in the configuration:
 
 ```php
 'epay' => [
-    'pid' => '你的 Client ID',
-    'key' => '你的 Client Secret',
-    'notify_url' => 'https://你的域名/api/notify.php',
-    'return_url' => 'https://你的域名/success.html',
+    'pid' => 'your Client ID',
+    'key' => 'your Client Secret',
+    'notify_url' => 'https://your-domain/api/notify.php',
+    'return_url' => 'https://your-domain/success.html',
 ],
 ```
 
-### 步骤 3：启动容器
+### Step 3: Start the container
 
 ```bash
 docker compose up -d
 ```
 
-**详细文档**：[DOCKER.md](DOCKER.md)
+For more detail, see [DOCKER.md](DOCKER.md).
 
 ---
 
-## 🔧 PHP 手动部署
+## 🔧 Manual PHP Deployment
 
-适合传统 PHP 环境（Apache/Nginx + PHP）。
+Suitable for a traditional PHP environment such as Apache/Nginx with PHP.
 
-### 快速启动（测试）
+### Quick start for testing
 
 ```bash
-# 克隆并配置
+# Clone and configure the project
 git clone https://github.com/Razewang/LINUX_EASY_CREDIT.git
 cd LINUX_EASY_CREDIT
 cp config/config.example.php config/config.php
-nano config/config.php  # 填写配置
+nano config/config.php  # Fill in the configuration
 
-# 启动服务器
+# Start the development server
 php -S 0.0.0.0:8000
 ```
 
-访问：`http://your-ip:8000`
+Open: `http://your-ip:8000`
 
-**生产环境**：建议使用 Nginx + PHP-FPM，详见 [DEPLOYMENT.md](DEPLOYMENT.md)
-
----
-
-## ✅ 测试积分流转流程
-
-1. 访问你的网站
-2. 选择或输入积分数量（建议先用 **0.01** 测试）
-3. 填写流转备注（可选）
-4. 点击"下一步"
-5. 前往 LINUX DO CREDIT 完成身份认证与积分流转
-6. 自动返回查看结果
+For production, Nginx with PHP-FPM is recommended. See [DEPLOYMENT.md](DEPLOYMENT.md) for details.
 
 ---
 
-## 🌐 配置检查清单
+## ✅ Test the Points Transfer Flow
 
-部署前请确认：
-
-- [ ] 已在 Linux.do Credit **创建应用**
-- [ ] 已正确填写 Client ID 和 Client Secret
-- [ ] 通知地址格式：`https://你的域名/api/notify.php`
-- [ ] 回调地址格式：`https://你的域名/success.html`
-- [ ] 地址必须是外网可访问的（不能用 localhost）
+1. Open your website.
+2. Select or enter a points amount. Start with **0.01** for testing.
+3. Enter an optional transfer note.
+4. Click "Next".
+5. Complete authentication and the points transfer in LINUX DO CREDIT.
+6. You will be redirected back to see the result.
 
 ---
 
-## ⚙️ 自定义配置
+## 🌐 Configuration Checklist
 
-### Docker/PHP 部署
+Before deployment, confirm that:
 
-编辑 `config/config.php`：
+- [ ] You have created an application in Linux.do Credit.
+- [ ] Your Client ID and Client Secret are correct.
+- [ ] The notification URL follows the format: `https://your-domain/api/notify.php`
+- [ ] The return URL follows the format: `https://your-domain/success.html`
+- [ ] The URLs are publicly accessible and do not use localhost.
+
+---
+
+## ⚙️ Custom Configuration
+
+### Docker/PHP deployment
+
+Edit `config/config.php`:
 
 ```php
-'preset_amounts' => [2, 6, 18, 66, 188],  // 预设金额
-'min_amount' => 1,      // 最小金额
-'max_amount' => 500,    // 最大金额
-'title' => '请我喝咖啡',
-'description' => '您的支持是创作的动力',
+'preset_amounts' => [2, 6, 18, 66, 188],  // Preset amounts
+'min_amount' => 1,      // Minimum amount
+'max_amount' => 500,    // Maximum amount
+'title' => 'Buy me a coffee',
+'description' => 'Your support keeps the project going',
 ```
 
 ---
 
-## 📝 自定义页面文案（WebUI）
+## 📝 Customizing Page Text (Web UI)
 
-直接改静态页面/前端脚本即可：
+Edit the static pages or front-end scripts directly:
 
-- 首页文案：`reward-website/index.html`（标题、副标题、区块标题、按钮文字、placeholder 等）
-- 成功/等待页文案：`reward-website/success.html`
-- 前端校验/错误提示：`reward-website/assets/js/main.js`
-- 主题切换提示文案：`reward-website/assets/js/theme.js`
+- Home-page text: `reward-website/index.html` (title, subtitle, section titles, button labels, placeholders, and more)
+- Success/waiting page text: `reward-website/success.html`
+- Front-end validation and error messages: `reward-website/assets/js/main.js`
+- Theme-switcher prompt text: `reward-website/assets/js/theme.js`
 
-### 修改首页主标题和说明
+### Change the home-page heading and description
 
-编辑根目录的 `index.html`，找到头部区域：
+Edit `index.html` in the project root and locate:
 
 ```html
 <div class="header">
@@ -173,69 +172,74 @@ php -S 0.0.0.0:8000
 </div>
 ```
 
-- 修改 `<h1>...</h1>` 可更改首页主标题。
-- 修改紧随其后的 `<p>...</p>` 可更改第二行说明文字。
-- 这两项是静态页面文案，Docker、PHP 和 Vercel 部署方式共用同一个 `index.html`。
+Change the `<h1>` text for the main heading and the following `<p>` text for the second-line description. Docker, PHP, and Vercel deployments all use this same static file.
 
-修改后生效方式：
+Apply changes as follows:
 
-- **Docker 部署**：`git pull` 后执行 `docker compose up -d --build`
-- **PHP 直跑**：刷新页面即可（必要时清缓存）
+- **Docker deployment**: run `git pull`, then `docker compose up -d --build`
+- **Direct PHP deployment**: refresh the page; clear the browser cache if necessary
 
 ---
 
-## 📁 项目结构
+## 📁 Project Structure
 
 ```
 reward-website/
-├── index.html              # 积分流转页面
-├── success.html            # 流转结果页面
+├── index.html              # Points-transfer page
+├── success.html            # Transfer-result page
 ├── api/
-│   ├── create_order.php    # PHP 版 API
+│   ├── create_order.php    # PHP API
 │   └── ...
 ├── config/
-│   └── config.example.php  # 配置模板
-└── assets/                 # CSS/JS 资源
+│   └── config.example.php  # Configuration template
+└── assets/                 # CSS/JS assets
 ```
 
 ---
 
-## ❓ 常见问题
+## ❓ Frequently Asked Questions
 
+### Q: How do I get a Client ID and Client Secret?
 
-### Q: 如何获取 Client ID 和 Secret？
-访问 https://credit.linux.do → 控制台 → 集市中心 → 创建应用
+Visit https://credit.linux.do → Console → Marketplace Center → Create an application.
 
-### Q: 签名验证失败怎么办？
-检查 Client ID 和 Secret 是否正确，确保没有多余空格。
+### Q: What should I do if signature verification fails?
 
-### Q: 如何查看日志？
+Verify that the Client ID and Client Secret are correct and contain no extra spaces.
+
+### Q: How do I view logs?
+
 - **Docker**: `docker compose logs -f`
 - **PHP**: `tail -f logs/*.log`
 
 ---
 
-## 📚 更多文档
+## 📚 More Documentation
 
-- [VERCEL.md](VERCEL.md) - Vercel 部署指南
-- [DOCKER.md](DOCKER.md) - Docker 部署指南
-- [DEPLOYMENT.md](DEPLOYMENT.md) - 完整部署文档
-- [THEME.md](THEME.md) - UI 主题自定义
-- [API.md](API.md) - 接口文档
+- [DOCKER.md](DOCKER.md) - Docker deployment guide
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Full deployment guide
+- [THEME.md](THEME.md) - UI theme customization
+- [API.md](API.md) - API documentation
 
 ---
 
-## 📧 支持
+## 📧 Support
 
-- **Linux.do Credit 文档**: https://credit.linux.do/docs
+- **Linux.do Credit documentation**: https://credit.linux.do/docs
 - **GitHub Issues**: https://github.com/Razewang/LINUX_EASY_CREDIT/issues
+
+---
+
+## 🙏 Acknowledgements
+
+Thanks to [1Password](https://1password.com/) for providing this project with a free 1Password Teams account through the [1Password for Open Source](https://github.com/1Password/for-open-source) program, which is used to securely manage project-related credentials, API keys, and other development secrets.
 
 ---
 
 ## 📄 License
 
-本项目采用 [MIT License](LICENSE) 开源。
+This project is open sourced under the [MIT License](LICENSE).
 
 ---
 
-**祝您使用愉快！** 🎉
+**Enjoy using it!** 🎉
