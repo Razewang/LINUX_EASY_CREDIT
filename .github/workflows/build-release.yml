@@ -106,17 +106,19 @@ jobs:
             : version.includes("-");
           let verifyTag = false;
 
-          if (publish && !prerelease) {
-            let tagSha;
+          if (publish) {
+            let tagSha = "";
             try {
               tagSha = execFileSync("git", ["rev-list", "-n", "1", tag], { encoding: "utf8" }).trim();
             } catch {
-              throw new Error(`Stable publication requires existing tag ${tag}`);
+              if (!prerelease) {
+                throw new Error(`Stable publication requires existing tag ${tag}`);
+              }
             }
-            if (tagSha !== sourceSha) {
+            if (tagSha && tagSha !== sourceSha) {
               throw new Error(`${tag} does not identify release source ${sourceSha}`);
             }
-            verifyTag = true;
+            verifyTag = Boolean(tagSha);
           }
 
           const output = process.env.GITHUB_OUTPUT;
