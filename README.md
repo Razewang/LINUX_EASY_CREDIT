@@ -2,7 +2,7 @@
 
 [English README](README_EN.md)
 
-当前版本：**v2.0.1**
+当前版本：**v2.0.1** <!-- x-release-please-version -->
 
 一个面向 [Linux.do](https://linux.do) 论坛社区的轻量积分流转小工具。它把 LINUX DO CREDIT 提供的易支付兼容接口包装成简洁的网页插件，让论坛用户可以更方便地选择积分数量、填写备注并完成积分流转。
 
@@ -222,6 +222,17 @@ reward-website/
 - [DEPLOYMENT.md](DEPLOYMENT.md) - 完整部署文档
 - [THEME.md](THEME.md) - UI 主题自定义
 - [API.md](API.md) - 接口文档
+
+## 🚢 GitHub 发布流程
+
+项目使用 GitHub Actions 和 Release Please 管理版本：
+
+1. 向 `master`（或 `main`）合并使用 `fix:`、`feat:`、`feat!:` 等 Conventional Commit 前缀的改动。
+2. Release Please 自动创建或更新 Release PR，内容包括版本号、`package-lock.json` 和 `CHANGELOG.md`。
+3. CI 通过后，配置了 `RELEASE_PLEASE_TOKEN` 时会自动批准检查并开启 GitHub Auto-merge；未配置时保留人工合并入口。
+4. Release PR 合并后自动创建 `v<版本>` GitHub Release，并上传源码压缩包与 `SHA256SUMS.txt`。
+
+启用自动合并还需要在仓库设置中打开 **Allow auto-merge**，并为默认分支配置必需的 CI 状态检查。`RELEASE_PLEASE_TOKEN` 应使用具备 Actions、Contents、Pull requests 读写权限的细粒度 PAT。也可以在 Actions 中手动运行 `release` 工作流进行验证、预发布或恢复发布。
 
 ---
 
