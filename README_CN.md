@@ -229,7 +229,7 @@ reward-website/
 
 1. 向 `master`（或 `main`）合并使用 `fix:`、`feat:`、`feat!:` 等 Conventional Commit 前缀的改动。
 2. Release Please 自动创建或更新 Release PR，内容包括版本号、`package-lock.json` 和 `CHANGELOG.md`。
-3. CI 通过后，配置了 `RELEASE_PLEASE_TOKEN` 时会自动批准检查并开启 GitHub Auto-merge；未配置时保留人工合并入口。
+3. 配置 `RELEASE_PLEASE_TOKEN` 后，Release Please PR 可直接启动 CI，并在检查出现后开启 GitHub Auto-merge；未配置时保留人工审核和合并入口。
 4. Release PR 合并后自动创建 `v<版本>` GitHub Release，并上传源码压缩包与 `SHA256SUMS.txt`。
 
 启用自动合并还需要在仓库设置中打开 **Allow auto-merge**，并为默认分支配置必需的 CI 状态检查。`RELEASE_PLEASE_TOKEN` 应使用具备 Actions、Contents、Pull requests 读写权限的细粒度 PAT。也可以在 Actions 中手动运行 `release` 工作流进行验证、预发布或恢复发布。

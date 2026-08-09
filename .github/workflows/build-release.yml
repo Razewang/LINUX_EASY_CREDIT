@@ -55,6 +55,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
           ref: ${{ inputs.ref || github.sha }}
 
       - name: Validate version and source tag
@@ -77,6 +78,9 @@ jobs:
           const sourceSha = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
           const tagRun = process.env.REF_TYPE === "tag";
           const requestedRun = Boolean(process.env.REQUESTED_VERSION);
+          if (tagRun && requestedRun && process.env.REQUESTED_VERSION !== process.env.REF_NAME.slice(1)) {
+            throw new Error(`Requested version ${process.env.REQUESTED_VERSION} conflicts with tag ${process.env.REF_NAME}`);
+          }
           const version = tagRun
             ? process.env.REF_NAME.slice(1)
             : requestedRun
@@ -136,6 +140,7 @@ jobs:
       - name: Checkout release source
         uses: actions/checkout@v4
         with:
+          persist-credentials: false
           ref: ${{ inputs.ref || github.sha }}
 
       - name: Setup Node.js
@@ -160,7 +165,9 @@ jobs:
         run: find . -name '*.php' -print0 | xargs -0 -n1 php -l
 
       - name: Build Docker image
-        run: docker build --build-arg APP_VERSION="${{ needs.preflight.outputs.version }}" -t "linux-easy-credit:${{ needs.preflight.outputs.version }}" .
+        env:
+          VERSION: ${{ needs.preflight.outputs.version }}
+        run: docker build --build-arg APP_VERSION="$VERSION" -t "linux-easy-credit:$VERSION" .
 
       - name: Create source archive
         env:

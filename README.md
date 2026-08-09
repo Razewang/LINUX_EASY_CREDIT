@@ -227,7 +227,7 @@ Versions are managed with GitHub Actions and Release Please:
 
 1. Merge changes into `master` (or `main`) using Conventional Commit prefixes such as `fix:`, `feat:`, and `feat!:`.
 2. Release Please automatically creates or updates a Release PR containing the version, `package-lock.json`, and `CHANGELOG.md` changes.
-3. After CI passes, configuring `RELEASE_PLEASE_TOKEN` lets the workflow approve the checks and enable GitHub Auto-merge; without it, the Release PR remains available for manual review.
+3. Configuring `RELEASE_PLEASE_TOKEN` lets Release Please PRs start CI without an approval gate and enables GitHub Auto-merge after the checks appear; without it, the Release PR remains available for manual review.
 4. Merging the Release PR creates a `v<version>` GitHub Release and uploads the source archive plus `SHA256SUMS.txt`.
 
 Auto-merge also requires the repository setting **Allow auto-merge** and required CI status checks on the default branch. `RELEASE_PLEASE_TOKEN` should be a fine-grained PAT with read/write access to Actions, Contents, and Pull requests. The `release` workflow can also be dispatched manually for validation, prereleases, or recovery runs.

@@ -50,14 +50,27 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       version: ${{ steps.release.outputs.version }}
+      pat_configured: ${{ steps.release_auth.outputs.pat_configured }}
     steps:
+      - name: Select release authentication
+        id: release_auth
+        env:
+          RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+        shell: bash
+        run: |
+          if [ -n "$RELEASE_PLEASE_TOKEN" ]; then
+            echo "pat_configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "pat_configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create or update release PR
         uses: googleapis/release-please-action@v4
         id: release
         with:
-          # Keep GITHUB_TOKEN here so the generated tag does not trigger a
-          # second tag publication run in parallel with the release job below.
-          token: ${{ github.token }}
+          # A PAT lets Release Please PRs trigger CI without an approval gate.
+          # GITHUB_TOKEN remains a fallback for manual release operation.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
@@ -66,6 +79,8 @@ jobs:
         if: ${{ steps.release.outputs.prs_created == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          BASE_BRANCH: ${{ github.ref_name }}
           PR_JSON: ${{ steps.release.outputs.pr }}
           PRS_JSON: ${{ steps.release.outputs.prs }}
         shell: bash
@@ -81,8 +96,8 @@ jobs:
           if [ -z "$pr_number" ]; then
             pr_number="$(
               gh pr list \
-                --repo "${{ github.repository }}" \
-                --base "${{ github.ref_name }}" \
+                --repo "$REPOSITORY" \
+                --base "$BASE_BRANCH" \
                 --state open \
                 --json number,headRefName \
                 --jq '.[] | select(.headRefName | startswith("release-please--branches--")) | .number' |
@@ -96,7 +111,7 @@ jobs:
 
           head_sha="$(
             gh pr view "$pr_number" \
-              --repo "${{ github.repository }}" \
+              --repo "$REPOSITORY" \
               --json headRefOid \
               --jq .headRefOid
           )"
@@ -114,6 +129,7 @@ jobs:
           # Optional fine-grained PAT. It needs Actions, contents, and pull
           # requests read/write permissions to approve and merge the PR.
           GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
           HEAD_SHA: ${{ steps.release_pr.outputs.head_sha }}
           PR_NUMBER: ${{ steps.release_pr.outputs.number }}
         shell: bash
@@ -127,7 +143,7 @@ jobs:
           for attempt in {1..15}; do
             runs_json="$(
               gh run list \
-                --repo "${{ github.repository }}" \
+                --repo "$REPOSITORY" \
                 --commit "$HEAD_SHA" \
                 --event pull_request \
                 --limit 20 \
@@ -149,11 +165,11 @@ jobs:
               jq -r --argjson id "$run_id" '.[] | select(.databaseId == $id) | .conclusion' <<<"$runs_json"
             )"
             if [ "$conclusion" = "action_required" ]; then
-              gh api --method POST "repos/${{ github.repository }}/actions/runs/$run_id/approve"
+              gh api --method POST "repos/$REPOSITORY/actions/runs/$run_id/approve"
             fi
           done
 
-          gh pr merge --auto --merge "$PR_NUMBER" --repo "${{ github.repository }}"
+          gh pr merge --auto --merge "$PR_NUMBER" --repo "$REPOSITORY"
 
   validate:
     name: Validate release source
@@ -182,7 +198,9 @@ jobs:
   publish-release-please:
     name: Publish Release Please version
     needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
+    # PAT-created tags trigger publish-tag. With GITHUB_TOKEN, publish here
+    # because token-generated tag events do not start another workflow run.
+    if: needs.release-please.outputs.release_created == 'true' && needs.release-please.outputs.pat_configured != 'true'
     permissions:
       contents: write
     uses: ./.github/workflows/publish.yml
