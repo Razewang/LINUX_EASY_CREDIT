@@ -1,0 +1,90 @@
+name: publish
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Exact project version to build (without v)"
+        required: false
+        default: ""
+        type: string
+      publish:
+        description: "Publish GitHub Release assets"
+        required: true
+        type: boolean
+      prerelease:
+        description: "Mark the publication as a prerelease"
+        required: false
+        default: false
+        type: boolean
+      ref:
+        description: "Git ref or SHA containing the exact release source"
+        required: false
+        default: ""
+        type: string
+
+concurrency:
+  group: publish-${{ inputs.version || inputs.ref || github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build release
+    uses: ./.github/workflows/build-release.yml
+    with:
+      version: ${{ inputs.version }}
+      publish: ${{ inputs.publish }}
+      prerelease: ${{ inputs.prerelease }}
+      ref: ${{ inputs.ref }}
+
+  publish-release:
+    name: Publish GitHub Release
+    if: needs.build.outputs.publish == 'true'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Download release assets
+        uses: actions/download-artifact@v4
+        with:
+          name: release-assets-${{ needs.build.outputs.version }}
+          path: assets
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.build.outputs.tag }}
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+          VERIFY_TAG: ${{ needs.build.outputs.verify_tag }}
+          SOURCE_SHA: ${{ needs.build.outputs.source_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            tag_sha="$(git rev-list -n 1 "$TAG")"
+            if [ "$tag_sha" != "$SOURCE_SHA" ]; then
+              echo "Existing $TAG does not identify $SOURCE_SHA." >&2
+              exit 1
+            fi
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --prerelease="$PRERELEASE"
+            gh release upload "$TAG" assets/* --repo "$GITHUB_REPOSITORY" --clobber
+            echo "Uploaded release assets to existing $TAG."
+            exit 0
+          fi
+
+          args=(release create "$TAG" assets/* --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --generate-notes --title "$TAG")
+          if [ "$VERIFY_TAG" = "true" ]; then args+=(--verify-tag); fi
+          if [ "$PRERELEASE" = "true" ]; then args+=(--prerelease); fi
+          gh "${args[@]}"

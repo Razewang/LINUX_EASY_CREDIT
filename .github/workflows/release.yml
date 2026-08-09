@@ -1,0 +1,223 @@
+name: release
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches:
+      - master
+      - main
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Exact project version to build (without v); blank uses package.json"
+        required: false
+        default: ""
+        type: string
+      publish:
+        description: "Publish GitHub Release assets"
+        required: true
+        default: false
+        type: boolean
+      prerelease:
+        description: "Mark a manual publication as a prerelease"
+        required: true
+        default: false
+        type: boolean
+      ref:
+        description: "Release tag/ref to build; blank uses the selected ref"
+        required: false
+        default: ""
+        type: string
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release-please:
+    if: github.event_name == 'push' && github.ref_type == 'branch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      version: ${{ steps.release.outputs.version }}
+      pat_configured: ${{ steps.release_auth.outputs.pat_configured }}
+    steps:
+      - name: Select release authentication
+        id: release_auth
+        env:
+          RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+        shell: bash
+        run: |
+          if [ -n "$RELEASE_PLEASE_TOKEN" ]; then
+            echo "pat_configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "pat_configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create or update release PR
+        uses: googleapis/release-please-action@v4
+        id: release
+        with:
+          # A PAT lets Release Please PRs trigger CI without an approval gate.
+          # GITHUB_TOKEN remains a fallback for manual release operation.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Resolve the release PR
+        id: release_pr
+        if: ${{ steps.release.outputs.prs_created == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          BASE_BRANCH: ${{ github.ref_name }}
+          PR_JSON: ${{ steps.release.outputs.pr }}
+          PRS_JSON: ${{ steps.release.outputs.prs }}
+        shell: bash
+        run: |
+          pr_number="$(
+            jq -r 'if type == "object" then (.number // empty) else empty end' <<<"$PR_JSON" 2>/dev/null || true
+          )"
+          if [ -z "$pr_number" ]; then
+            pr_number="$(
+              jq -r 'if type == "array" then (.[0].number // empty) else empty end' <<<"${PRS_JSON:-[]}" 2>/dev/null || true
+            )"
+          fi
+          if [ -z "$pr_number" ]; then
+            pr_number="$(
+              gh pr list \
+                --repo "$REPOSITORY" \
+                --base "$BASE_BRANCH" \
+                --state open \
+                --json number,headRefName \
+                --jq '.[] | select(.headRefName | startswith("release-please--branches--")) | .number' |
+                head -n 1
+            )"
+          fi
+          if [ -z "$pr_number" ]; then
+            echo "Release Please reported a PR update, but no open release PR was found." >&2
+            exit 1
+          fi
+
+          head_sha="$(
+            gh pr view "$pr_number" \
+              --repo "$REPOSITORY" \
+              --json headRefOid \
+              --jq .headRefOid
+          )"
+          if [ -z "$head_sha" ]; then
+            echo "Release PR #$pr_number has no head commit." >&2
+            exit 1
+          fi
+
+          echo "number=$pr_number" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$head_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Approve checks and enable auto-merge on the release PR
+        if: ${{ steps.release_pr.outputs.number != '' }}
+        env:
+          # Optional fine-grained PAT. It needs Actions, contents, and pull
+          # requests read/write permissions to approve and merge the PR.
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          HEAD_SHA: ${{ steps.release_pr.outputs.head_sha }}
+          PR_NUMBER: ${{ steps.release_pr.outputs.number }}
+        shell: bash
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "RELEASE_PLEASE_TOKEN is not configured; leaving the release PR for manual merge." >&2
+            exit 0
+          fi
+
+          runs_json="[]"
+          for attempt in {1..15}; do
+            runs_json="$(
+              gh run list \
+                --repo "$REPOSITORY" \
+                --commit "$HEAD_SHA" \
+                --event pull_request \
+                --limit 20 \
+                --json databaseId,name,status,conclusion
+            )"
+            ci_run="$(jq -r '[.[] | select((.name | ascii_downcase) == "ci")][0].databaseId // empty' <<<"$runs_json")"
+            release_run="$(jq -r '[.[] | select((.name | ascii_downcase) == "release")][0].databaseId // empty' <<<"$runs_json")"
+            if [ -n "$ci_run" ] && [ -n "$release_run" ]; then break; fi
+            sleep 2
+          done
+
+          if [ -z "${ci_run:-}" ] || [ -z "${release_run:-}" ]; then
+            echo "Validation runs for release PR #$PR_NUMBER were not created in time." >&2
+            exit 1
+          fi
+
+          for run_id in "$ci_run" "$release_run"; do
+            conclusion="$(
+              jq -r --argjson id "$run_id" '.[] | select(.databaseId == $id) | .conclusion' <<<"$runs_json"
+            )"
+            if [ "$conclusion" = "action_required" ]; then
+              gh api --method POST "repos/$REPOSITORY/actions/runs/$run_id/approve"
+            fi
+          done
+
+          gh pr merge --auto --merge "$PR_NUMBER" --repo "$REPOSITORY"
+
+  validate:
+    name: Validate release source
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/build-release.yml
+    with:
+      version: ""
+      publish: false
+      prerelease: false
+      ref: ${{ github.sha }}
+
+  publish-tag:
+    name: Publish tagged release
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/publish.yml
+    with:
+      version: ""
+      publish: true
+      prerelease: ${{ contains(github.ref_name, '-') }}
+      ref: ${{ github.ref }}
+
+  publish-release-please:
+    name: Publish Release Please version
+    needs: release-please
+    # PAT-created tags trigger publish-tag. With GITHUB_TOKEN, publish here
+    # because token-generated tag events do not start another workflow run.
+    if: needs.release-please.outputs.release_created == 'true' && needs.release-please.outputs.pat_configured != 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/publish.yml
+    with:
+      version: ${{ needs.release-please.outputs.version }}
+      publish: true
+      prerelease: false
+      ref: v${{ needs.release-please.outputs.version }}
+
+  manual:
+    name: Manual release
+    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/publish.yml
+    with:
+      version: ${{ inputs.version }}
+      publish: ${{ inputs.publish }}
+      prerelease: ${{ inputs.prerelease }}
+      ref: ${{ inputs.ref || github.sha }}

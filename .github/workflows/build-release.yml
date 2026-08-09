@@ -1,0 +1,222 @@
+name: build release
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Exact project version to build (without v)"
+        required: false
+        default: ""
+        type: string
+      publish:
+        description: "Whether release metadata is being prepared for publication"
+        required: true
+        type: boolean
+      prerelease:
+        description: "Mark the publication as a prerelease"
+        required: false
+        default: false
+        type: boolean
+      ref:
+        description: "Git ref or SHA containing the exact release source"
+        required: false
+        default: ""
+        type: string
+    outputs:
+      version:
+        value: ${{ jobs.preflight.outputs.version }}
+      tag:
+        value: ${{ jobs.preflight.outputs.tag }}
+      publish:
+        value: ${{ jobs.preflight.outputs.publish }}
+      prerelease:
+        value: ${{ jobs.preflight.outputs.prerelease }}
+      verify_tag:
+        value: ${{ jobs.preflight.outputs.verify_tag }}
+      source_sha:
+        value: ${{ jobs.preflight.outputs.source_sha }}
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: Validate release metadata
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+      tag: ${{ steps.metadata.outputs.tag }}
+      publish: ${{ steps.metadata.outputs.publish }}
+      prerelease: ${{ steps.metadata.outputs.prerelease }}
+      verify_tag: ${{ steps.metadata.outputs.verify_tag }}
+      source_sha: ${{ steps.metadata.outputs.source_sha }}
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Validate version and source tag
+        id: metadata
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REQUESTED_VERSION: ${{ inputs.version }}
+          REQUESTED_PUBLISH: ${{ inputs.publish }}
+          REQUESTED_PRERELEASE: ${{ inputs.prerelease }}
+        shell: bash
+        run: |
+          node <<'NODE'
+          const { appendFileSync, readFileSync } = require("node:fs");
+          const { execFileSync } = require("node:child_process");
+
+          const packageJson = JSON.parse(readFileSync("package.json", "utf8"));
+          const packageLock = JSON.parse(readFileSync("package-lock.json", "utf8"));
+          const semver = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
+          const sourceSha = execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+          const tagRun = process.env.REF_TYPE === "tag";
+          const requestedRun = Boolean(process.env.REQUESTED_VERSION);
+          if (tagRun && requestedRun && process.env.REQUESTED_VERSION !== process.env.REF_NAME.slice(1)) {
+            throw new Error(`Requested version ${process.env.REQUESTED_VERSION} conflicts with tag ${process.env.REF_NAME}`);
+          }
+          const version = tagRun
+            ? process.env.REF_NAME.slice(1)
+            : requestedRun
+              ? process.env.REQUESTED_VERSION
+              : packageJson.version;
+
+          if (!semver.test(version)) throw new Error(`Invalid semantic version: ${version}`);
+          if (version !== packageJson.version) {
+            throw new Error(`Release ${version} does not match package.json ${packageJson.version}`);
+          }
+          if (packageLock.version !== packageJson.version) {
+            throw new Error(`package-lock.json ${packageLock.version} does not match package.json ${packageJson.version}`);
+          }
+
+          const tag = `v${version}`;
+          if (tagRun && process.env.REF_NAME !== tag) {
+            throw new Error(`Tag must be exactly ${tag}`);
+          }
+
+          const publish = process.env.REQUESTED_PUBLISH === "true";
+          const prerelease = publish
+            ? process.env.REQUESTED_PRERELEASE === "true"
+            : version.includes("-");
+          let verifyTag = false;
+
+          if (publish) {
+            let tagSha = "";
+            try {
+              tagSha = execFileSync("git", ["rev-list", "-n", "1", tag], { encoding: "utf8" }).trim();
+            } catch {
+              if (!prerelease) {
+                throw new Error(`Stable publication requires existing tag ${tag}`);
+              }
+            }
+            if (tagSha && tagSha !== sourceSha) {
+              throw new Error(`${tag} does not identify release source ${sourceSha}`);
+            }
+            verifyTag = Boolean(tagSha);
+          }
+
+          const output = process.env.GITHUB_OUTPUT;
+          for (const [key, value] of Object.entries({
+            version,
+            tag,
+            publish: String(publish),
+            prerelease: String(prerelease),
+            verify_tag: String(verifyTag),
+            source_sha: sourceSha,
+          })) {
+            appendFileSync(output, `${key}=${value}\n`);
+          }
+          NODE
+
+  build:
+    name: Test and package release
+    needs: preflight
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release source
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Run Node tests
+        run: npm test
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: curl, mbstring
+
+      - name: Lint PHP files
+        run: find . -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Build Docker image
+        env:
+          VERSION: ${{ needs.preflight.outputs.version }}
+        run: docker build --build-arg APP_VERSION="$VERSION" -t "linux-easy-credit:$VERSION" .
+
+      - name: Create source archive
+        env:
+          VERSION: ${{ needs.preflight.outputs.version }}
+          SOURCE_SHA: ${{ needs.preflight.outputs.source_sha }}
+        run: |
+          git archive \
+            --format=tar.gz \
+            --prefix="linux-easy-credit-${VERSION}/" \
+            --output="linux-easy-credit-${VERSION}.tar.gz" \
+            "$SOURCE_SHA"
+
+      - name: Upload release build
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ needs.preflight.outputs.version }}
+          path: linux-easy-credit-${{ needs.preflight.outputs.version }}.tar.gz
+          if-no-files-found: error
+
+  assets:
+    name: Create checksums
+    needs: [preflight, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download release build
+        uses: actions/download-artifact@v4
+        with:
+          name: release-${{ needs.preflight.outputs.version }}
+          path: assets
+
+      - name: Create and verify checksum manifest
+        env:
+          VERSION: ${{ needs.preflight.outputs.version }}
+        shell: bash
+        run: |
+          cd assets
+          expected="linux-easy-credit-${VERSION}.tar.gz"
+          actual="$(find . -maxdepth 1 -type f -printf '%f\n' | sort)"
+          if [ "$actual" != "$expected" ]; then
+            echo "Unexpected release assets: $actual" >&2
+            exit 1
+          fi
+          sha256sum "$expected" > SHA256SUMS.txt
+
+      - name: Upload checksummed release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-${{ needs.preflight.outputs.version }}
+          path: assets/*
+          if-no-files-found: error

@@ -1,10 +1,13 @@
 # 使用官方 PHP-FPM 镜像作为基础镜像
 FROM php:8.3-fpm-alpine
 
+# 由发布工作流注入正式版本；本地构建默认使用 dev，避免版本号漂移。
+ARG APP_VERSION=dev
+
 # 设置维护者信息
 LABEL maintainer="Reward Website Project"
 LABEL description="Linux.do Credit Reward Website"
-LABEL version="2.0.1"
+LABEL version="${APP_VERSION}"
 
 # 设置工作目录
 WORKDIR /var/www/html
