@@ -59,6 +59,22 @@ test('create-order rejects malformed amounts before writing storage', async () =
   assert.match(body.message, /金额格式/);
 });
 
+test('create-order rejects amounts below minimum limit', async () => {
+  process.env.EPAY_PID = '001';
+  process.env.EPAY_KEY = 'secret';
+  process.env.MIN_AMOUNT = '1.00';
+
+  const response = await createOrderPost(new Request('https://example.test/api/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ amount: '0.50', message: '' }),
+  }));
+  const body = await response.json();
+
+  assert.equal(response.status, 400);
+  assert.match(body.message, /打赏积分不能小于 1 LDC/);
+});
+
 test('query-order rejects invalid order numbers before reading storage', async () => {
   const response = await queryOrderGet(
     new Request('https://example.test/api/query?order_no=../config'),

@@ -56,7 +56,7 @@
 ```json
 {
     "code": 400,
-    "message": "打赏金额不能小于 0.01 元",
+    "message": "打赏积分不能小于 0.01 LDC",
     "data": null
 }
 ```

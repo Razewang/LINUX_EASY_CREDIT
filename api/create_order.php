@@ -34,11 +34,11 @@ try {
 
     // 验证金额
     if ($amount < $config['reward']['min_amount']) {
-        $helper->jsonResponse(400, '打赏金额不能小于 ' . $config['reward']['min_amount'] . ' 元');
+        $helper->jsonResponse(400, '打赏积分不能小于 ' . $config['reward']['min_amount'] . ' LDC');
     }
 
     if ($amount > $config['reward']['max_amount']) {
-        $helper->jsonResponse(400, '打赏金额不能大于 ' . $config['reward']['max_amount'] . ' 元');
+        $helper->jsonResponse(400, '打赏积分不能大于 ' . $config['reward']['max_amount'] . ' LDC');
     }
 
     // 金额小数位数检查

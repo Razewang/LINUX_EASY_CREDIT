@@ -47,3 +47,6 @@ composer.lock
 /uploads/
 /upload/
 .vercel
+
+# 本地优化报告与私有文档
+/OPTIMIZATION_REPORT.md

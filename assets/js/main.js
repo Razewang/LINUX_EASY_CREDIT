@@ -42,7 +42,7 @@ function initPresetAmounts() {
     PRESET_AMOUNTS.forEach(amount => {
         const button = document.createElement('button');
         button.className = 'amount-btn';
-        button.textContent = `¥${amount}`;
+        button.textContent = `${amount} LDC`;
         button.dataset.amount = amount;
         button.onclick = function() {
             selectAmount(amount);
@@ -137,17 +137,17 @@ async function handleSubmit() {
 
     // 验证金额
     if (amount <= 0) {
-        showError('请选择或输入打赏金额');
+        showError('请选择或输入打赏积分');
         return;
     }
 
     if (amount < amountLimits.minAmount) {
-        showError(`打赏金额不能小于 ${amountLimits.minAmount} 元`);
+        showError(`打赏积分不能小于 ${amountLimits.minAmount} LDC`);
         return;
     }
 
     if (amount > amountLimits.maxAmount) {
-        showError(`打赏金额不能大于 ${amountLimits.maxAmount} 元`);
+        showError(`打赏积分不能大于 ${amountLimits.maxAmount} LDC`);
         return;
     }
 

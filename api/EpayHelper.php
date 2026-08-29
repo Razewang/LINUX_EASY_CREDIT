@@ -44,14 +44,19 @@ class EpayHelper
     }
 
     /**
-     * 验证签名
+     * 验证签名（恒定时间比较，防止时序攻击）
      * @param array $params 参数数组
      * @param string $sign 签名
      * @return bool
      */
     public function verifySign($params, $sign)
     {
-        return $this->createSign($params) === $sign;
+        if (!is_string($sign) || !preg_match('/^[a-fA-F0-9]{32}$/', $sign)) {
+            return false;
+        }
+
+        $localSign = $this->createSign($params);
+        return hash_equals(strtolower($localSign), strtolower($sign));
     }
 
     /**

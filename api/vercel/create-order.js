@@ -15,10 +15,10 @@ export async function POST(request) {
 
     const numericAmount = Number(amount);
     if (numericAmount < config.reward.minAmount) {
-      return jsonResponse(400, `打赏金额不能小于 ${config.reward.minAmount} 元`);
+      return jsonResponse(400, `打赏积分不能小于 ${config.reward.minAmount} LDC`);
     }
     if (numericAmount > config.reward.maxAmount) {
-      return jsonResponse(400, `打赏金额不能大于 ${config.reward.maxAmount} 元`);
+      return jsonResponse(400, `打赏积分不能大于 ${config.reward.maxAmount} LDC`);
     }
 
     if (input?.message !== undefined && typeof input.message !== 'string') {

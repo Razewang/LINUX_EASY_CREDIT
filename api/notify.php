@@ -24,14 +24,8 @@ try {
         exit;
     }
 
-    // 验证签名
-    $sign = $params['sign'];
-    unset($params['sign']);
-    unset($params['sign_type']);
-
-    $localSign = $helper->createSign($params);
-
-    if ($localSign !== $receiveSign) {
+    // 验证签名（使用 EpayHelper 中的 hash_equals 安全比较）
+    if (!$helper->verifySign($params, $receiveSign)) {
         $helper->log("回调失败: 签名验证失败", 'error');
         echo 'fail';
         exit;
