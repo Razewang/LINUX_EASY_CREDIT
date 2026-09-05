@@ -102,11 +102,7 @@ try {
     ];
 
     $orderFile = __DIR__ . '/../logs/orders/' . $outTradeNo . '.json';
-    $orderDir = dirname($orderFile);
-    if (!is_dir($orderDir)) {
-        mkdir($orderDir, 0755, true);
-    }
-    file_put_contents($orderFile, json_encode($orderData, JSON_UNESCAPED_UNICODE), LOCK_EX);
+    $helper->saveOrder($orderFile, $orderData);
 
     // 返回支付URL和订单信息
     $helper->jsonResponse(200, '订单创建成功', [

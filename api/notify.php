@@ -81,7 +81,7 @@ try {
         $orderData['status'] = 1;
         $orderData['trade_no'] = $tradeNo;
         $orderData['pay_time'] = date('Y-m-d H:i:s');
-        file_put_contents($orderFile, json_encode($orderData, JSON_UNESCAPED_UNICODE), LOCK_EX);
+        $helper->saveOrder($orderFile, $orderData);
 
         $helper->log("订单支付成功: {$outTradeNo}, 金额: {$money}");
 
@@ -110,6 +110,7 @@ try {
     }
 
 } catch (Exception $e) {
+    http_response_code(500);
     $helper->log("回调处理异常: " . $e->getMessage(), 'error');
     echo 'fail';
 }

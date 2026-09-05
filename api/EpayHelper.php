@@ -127,6 +127,38 @@ class EpayHelper
     }
 
     /**
+     * Save a complete order before replacing the previous file.
+     * Failed writes leave the previous order available for callback retries.
+     *
+     * @throws JsonException|RuntimeException
+     */
+    public function saveOrder($orderFile, array $orderData)
+    {
+        $json = json_encode($orderData, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+        $orderDir = dirname($orderFile);
+        if (!is_dir($orderDir) && !@mkdir($orderDir, 0755, true) && !is_dir($orderDir)) {
+            throw new RuntimeException('创建订单目录失败');
+        }
+
+        // Keep the temporary file on the same filesystem for atomic replacement.
+        $tempFile = $orderFile . '.' . bin2hex(random_bytes(8)) . '.tmp';
+        try {
+            $bytesWritten = @file_put_contents($tempFile, $json);
+            if ($bytesWritten !== strlen($json)) {
+                throw new RuntimeException('订单文件写入失败');
+            }
+
+            if (!@rename($tempFile, $orderFile)) {
+                throw new RuntimeException('订单文件替换失败');
+            }
+        } finally {
+            if (is_file($tempFile)) {
+                @unlink($tempFile);
+            }
+        }
+    }
+
+    /**
      * 记录日志
      * @param string $message 日志内容
      * @param string $type 日志类型
