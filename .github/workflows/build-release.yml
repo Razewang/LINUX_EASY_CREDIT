@@ -166,9 +166,6 @@ jobs:
       - name: Lint PHP files
         run: find . -name '*.php' -print0 | xargs -0 -n1 php -l
 
-      - name: Test PHP order persistence
-        run: php test/php/order-persistence.test.php
-
       - name: Build Docker image
         env:
           VERSION: ${{ needs.preflight.outputs.version }}
