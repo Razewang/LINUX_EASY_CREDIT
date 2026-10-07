@@ -12,8 +12,8 @@ mkdir -p /run/nginx
 cat > /usr/local/etc/php/conf.d/reward-runtime.ini <<EOF
 memory_limit=${PHP_MEMORY_LIMIT:-256M}
 max_execution_time=${PHP_MAX_EXECUTION_TIME:-300}
-upload_max_filesize=${PHP_UPLOAD_MAX_FILESIZE:-10M}
-post_max_size=${PHP_POST_MAX_SIZE:-10M}
+upload_max_filesize=${PHP_UPLOAD_MAX_FILESIZE:-16K}
+post_max_size=${PHP_POST_MAX_SIZE:-16K}
 EOF
 
 # 设置权限
@@ -27,6 +27,14 @@ if [ ! -f "/var/www/html/config/config.php" ]; then
         echo "提示: 可以复制 config.example.php 到 config.php 并修改配置"
     fi
 fi
+
+# 后台定时清理超过 24 小时的未支付订单和过期限速文件（每小时一次）
+(
+    while true; do
+        php /var/www/html/scripts/cleanup_orders.php --max-age-hours=24 || echo "订单清理失败" >&2
+        sleep 3600
+    done
+) &
 
 # 启动 PHP-FPM
 echo "Starting PHP-FPM..."
