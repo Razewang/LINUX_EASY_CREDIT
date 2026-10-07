@@ -96,6 +96,7 @@ function createEndpointFixture($root, $name, $endpoint, $failSave)
     mkdir($dir . '/logs/orders', 0755, true);
     copy(__DIR__ . '/../../api/' . $endpoint . '.php', $dir . '/api/' . $endpoint . '.php');
     copy(__DIR__ . '/../../api/EpayHelper.php', $dir . '/api/EpayHelper.php');
+    copy(__DIR__ . '/../../api/InputGuard.php', $dir . '/api/InputGuard.php');
 
     if ($failSave) {
         // Exercise the unchanged endpoint with a helper that rejects storage.

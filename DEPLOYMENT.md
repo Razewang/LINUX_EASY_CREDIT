@@ -509,6 +509,20 @@ tail -f /home/paygo/reward-website/logs/$(date +%Y-%m-%d).log
 
 ---
 
+## 🧹 限速与过期订单清理（手动部署必做）
+
+- **请求体大小**：把 PHP 的 `post_max_size`、`upload_max_filesize` 设为 `16K`，Nginx 的 `client_max_body_size` 设为 `16k`。
+- **限速**：`api/create_order.php` 内置按 IP 的文件限速（默认每分钟 10 次，超限返回 429，配置项见 `config.php` 的 `rate_limit`）。若前面有反向代理/CDN，`REMOTE_ADDR` 是代理 IP，请调大阈值或关闭，并在代理层限速。Nginx 部署可参考 `docker/nginx.conf` 与 `docker/default.conf` 中的 `limit_req` 配置。
+- **清理过期订单**：`scripts/cleanup_orders.php` 删除超过 24 小时的未支付订单（已支付订单不会删除），并清理过期限速文件。Docker 镜像已每小时自动执行；手动部署请加 crontab（以 Web 运行用户执行）：
+
+```bash
+0 * * * * php /path/to/LINUX_EASY_CREDIT/scripts/cleanup_orders.php --max-age-hours=24 >> /path/to/LINUX_EASY_CREDIT/logs/cleanup.log 2>&1
+```
+
+可先用 `--dry-run` 查看将删除的数量。
+
+---
+
 ## 🔒 安全加固
 
 ### 1. 隐藏 PHP 版本
