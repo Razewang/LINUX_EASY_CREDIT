@@ -214,6 +214,10 @@ Verify that the Client ID and Client Secret are correct and contain no extra spa
 
 ---
 
+## Optional Secret Management
+
+Developers may use [1Password CLI](https://developer.1password.com/docs/cli/) to manage development secrets. It is optional and is not required for installation, development, testing, or deployment. Normal project setup does not install the CLI or access a vault. See [AGENTS.md](AGENTS.md) for agent usage rules.
+
 ## 📚 More Documentation
 
 - [DOCKER.md](DOCKER.md) - Docker deployment guide
