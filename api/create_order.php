@@ -15,39 +15,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/EpayHelper.php';
+require_once __DIR__ . '/InputGuard.php';
 
 // 加载配置
 $config = require __DIR__ . '/../config/config.php';
 $helper = new EpayHelper($config['epay']);
 
 try {
-    // 获取请求参数
-    $input = json_decode(file_get_contents('php://input'), true);
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        $helper->jsonResponse(405, '请求方法不支持');
+    }
 
-    if (!$input) {
+    // 简单的按 IP 限速（Docker 部署另有 Nginx limit_req）
+    $rateLimit = $config['rate_limit'] ?? [];
+    if (($rateLimit['enabled'] ?? true)
+        && !lec_rate_limit_allow(
+            __DIR__ . '/../logs/ratelimit',
+            'create:' . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'),
+            (int) ($rateLimit['create_per_minute'] ?? 10),
+            60
+        )) {
+        header('Retry-After: 60');
+        $helper->jsonResponse(429, '请求过于频繁，请稍后重试');
+    }
+
+    // 获取请求参数：有请求体时必须是合法 JSON 对象，否则回退到表单字段
+    $rawBody = file_get_contents('php://input');
+    if (is_string($rawBody) && trim($rawBody) !== '' && $_POST === []) {
+        $input = json_decode($rawBody, true);
+        if (!is_array($input)) {
+            $helper->jsonResponse(400, '请求格式不正确');
+        }
+    } else {
         $input = $_POST;
     }
 
-    // 验证必填参数
-    $amount = isset($input['amount']) ? floatval($input['amount']) : 0;
-    $message = isset($input['message']) ? trim($input['message']) : '';
-
-    // 验证金额
-    if ($amount < $config['reward']['min_amount']) {
-        $helper->jsonResponse(400, '打赏积分不能小于 ' . $config['reward']['min_amount'] . ' LDC');
+    $validated = lec_validate_create_input($input, $config['reward']);
+    if ($validated['error'] !== null) {
+        $helper->jsonResponse(400, $validated['error']);
     }
-
-    if ($amount > $config['reward']['max_amount']) {
-        $helper->jsonResponse(400, '打赏积分不能大于 ' . $config['reward']['max_amount'] . ' LDC');
-    }
-
-    // 金额小数位数检查
-    if (strpos(strval($amount), '.') !== false) {
-        $decimals = strlen(substr(strrchr(strval($amount), '.'), 1));
-        if ($decimals > 2) {
-            $helper->jsonResponse(400, '金额小数位数不能超过2位');
-        }
-    }
+    $amount = (float) $validated['amount'];
+    $message = $validated['message'];
 
     // 生成订单号
     $outTradeNo = $helper->generateOrderNo();
@@ -61,7 +69,7 @@ try {
         'type' => 'epay',
         'out_trade_no' => $outTradeNo,
         'name' => '打赏支持' . ($message ? '：' . mb_substr($message, 0, 20) : ''),
-        'money' => number_format($amount, 2, '.', ''),  // 格式化为两位小数: 3 → "3.00"
+        'money' => $validated['amount'],  // 已格式化为两位小数: 3 → "3.00"
         // notify_url 和 return_url 已在控制台配置，不在此传递
     ];
 

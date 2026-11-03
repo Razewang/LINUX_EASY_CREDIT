@@ -93,6 +93,15 @@ return [
         'preset_amounts' => [1, 5, 10, 20, 50, 100],
     ],
 
+    // 创建订单接口的按 IP 限速（PHP 内实现，适用于所有部署方式）
+    // 状态文件存放在 logs/ratelimit/，由 scripts/cleanup_orders.php 顺带清理。
+    // 注意：如果前面有反向代理/CDN，REMOTE_ADDR 是代理 IP，所有访客会共享同一额度，
+    // 此时请调大阈值或关闭，并在代理层做限速。
+    'rate_limit' => [
+        'enabled' => true,
+        'create_per_minute' => 10,
+    ],
+
     // 数据库配置（可选）
     // 如果您需要将打赏记录保存到数据库，请配置此项
     'database' => [
