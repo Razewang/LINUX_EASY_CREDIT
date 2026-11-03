@@ -214,6 +214,10 @@ reward-website/
 
 ---
 
+## 可选的密钥管理
+
+开发者可使用 [1Password CLI](https://developer.1password.com/docs/cli/) 管理开发密钥。这是可选工具，不是安装、开发、测试或部署的必需依赖。常规项目设置不会安装 CLI 或访问保险库。AI 助手的使用约定见 [AGENTS.md](AGENTS.md)。
+
 ## 📚 更多文档
 
 - [VERCEL.md](VERCEL.md) - Vercel 部署指南
