@@ -90,7 +90,8 @@ try {
             expect($result['error'] === null && $result['amount'] === $out, 'Rejected valid amount ' . var_export($in, true));
             expect($result['message'] === 'hi', 'Message was not trimmed');
         }
-        expect(lec_validate_create_input(['amount' => '5'], $reward)['message'] === '', 'Missing message should be empty');
+        $withoutMessage = lec_validate_create_input(['amount' => '5'], $reward);
+        expect($withoutMessage['error'] === null && $withoutMessage['message'] === '', 'Missing message should be accepted as empty');
     });
 
     check('validation rejects malformed amounts and non-string fields', function () use ($reward) {
@@ -101,7 +102,7 @@ try {
         }
         expect(lec_validate_create_input([], $reward)['error'] === $amountError, 'Missing amount accepted');
         expect(lec_validate_create_input('x', $reward)['error'] === '请求格式不正确', 'Non-array input accepted');
-        foreach ([['a'], 123, false, ['k' => 'v']] as $bad) {
+        foreach ([null, ['a'], 123, false, ['k' => 'v']] as $bad) {
             $result = lec_validate_create_input(['amount' => '1', 'message' => $bad], $reward);
             expect($result['error'] === '留言必须是字符串', 'Accepted message ' . var_export($bad, true));
         }
@@ -187,7 +188,7 @@ try {
         $config = [
             'epay' => ['pid' => 'test-pid', 'key' => 'test-secret', 'gateway' => 'https://example.invalid/epay'],
             'reward' => ['min_amount' => 0.01, 'max_amount' => 9999.99],
-            'rate_limit' => ['create_per_minute' => 5],
+            'rate_limit' => ['create_per_minute' => 6],
         ];
         file_put_contents($site . '/config/config.php', '<?php return ' . var_export($config, true) . ';');
         [$server, $port] = startServer($site);
@@ -196,6 +197,7 @@ try {
             ['{not json', '请求格式不正确'],
             ['"just a string"', '请求格式不正确'],
             ['{"amount":"1","message":["a"]}', '留言必须是字符串'],
+            ['{"amount":"1","message":null}', '留言必须是字符串'],
             ['{"amount":"1.234"}', '金额格式不正确，最多支持两位小数'],
         ];
         foreach ($cases as [$body, $message]) {
@@ -207,7 +209,7 @@ try {
         expect(count(glob($site . '/logs/orders/*.json')) === 1, 'Rejected requests created orders');
 
         $limited = postJson($port, '{"amount":2}');
-        expect($limited['status'] === 429 && $limited['body']['code'] === 429, 'Sixth request was not rate limited: ' . json_encode($limited, JSON_UNESCAPED_UNICODE));
+        expect($limited['status'] === 429 && $limited['body']['code'] === 429, 'Seventh request was not rate limited: ' . json_encode($limited, JSON_UNESCAPED_UNICODE));
     });
 } catch (Throwable $error) {
     fwrite(STDERR, 'FAIL: ' . $error->getMessage() . "\n");

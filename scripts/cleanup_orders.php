@@ -13,6 +13,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 require_once __DIR__ . '/../api/InputGuard.php';
+require_once __DIR__ . '/../api/OrderLock.php';
 
 /**
  * @return array ['deleted' => string[], 'kept' => int]
@@ -24,22 +25,25 @@ function lec_cleanup_orders($ordersDir, $maxAgeSeconds, $now = null, $dryRun = f
     $kept = 0;
 
     foreach (glob(rtrim($ordersDir, '/') . '/*.json') ?: [] as $file) {
-        $order = json_decode((string) @file_get_contents($file), true);
-        if (!is_array($order) || (int) ($order['status'] ?? 0) === 1) {
-            $kept++;
-            continue;
-        }
+        $removed = lec_with_orders_lock($ordersDir, function () use ($file, $maxAgeSeconds, $now, $dryRun) {
+            $order = json_decode((string) @file_get_contents($file), true);
+            if (!is_array($order) || (int) ($order['status'] ?? 0) === 1) {
+                return false;
+            }
 
-        $created = isset($order['create_time']) ? strtotime((string) $order['create_time']) : false;
-        if ($created === false) {
-            $created = @filemtime($file);
-        }
-        if ($created === false || $now - $created < $maxAgeSeconds) {
-            $kept++;
-            continue;
-        }
+            $created = isset($order['create_time']) ? strtotime((string) $order['create_time']) : false;
+            if ($created === false) {
+                clearstatcache(true, $file);
+                $created = @filemtime($file);
+            }
+            if ($created === false || $now - $created < $maxAgeSeconds) {
+                return false;
+            }
 
-        if ($dryRun || @unlink($file)) {
+            return $dryRun || @unlink($file);
+        });
+
+        if ($removed) {
             $deleted[] = basename($file);
         } else {
             $kept++;

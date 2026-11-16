@@ -36,7 +36,7 @@ function lec_validate_create_input($input, array $reward)
         return $fail('打赏积分不能大于 ' . $reward['max_amount'] . ' LDC');
     }
 
-    if (array_key_exists('message', $input) && $input['message'] !== null && !is_string($input['message'])) {
+    if (array_key_exists('message', $input) && !is_string($input['message'])) {
         return $fail('留言必须是字符串');
     }
     $message = trim((string) ($input['message'] ?? ''));
