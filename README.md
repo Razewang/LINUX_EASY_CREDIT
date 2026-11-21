@@ -224,6 +224,7 @@ Developers may use [1Password CLI](https://developer.1password.com/docs/cli/) to
 - [DEPLOYMENT.md](DEPLOYMENT.md) - Full deployment guide
 - [THEME.md](THEME.md) - UI theme customization
 - [API.md](API.md) - API documentation
+- [FOLLOW_UP_PLAN.md](FOLLOW_UP_PLAN.md) - Chinese follow-up plan for PHP/Vercel parity and privacy hardening
 
 ## 🚢 GitHub Release Flow
 
