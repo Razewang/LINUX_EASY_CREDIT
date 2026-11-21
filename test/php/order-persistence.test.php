@@ -96,6 +96,8 @@ function createEndpointFixture($root, $name, $endpoint, $failSave)
     mkdir($dir . '/logs/orders', 0755, true);
     copy(__DIR__ . '/../../api/' . $endpoint . '.php', $dir . '/api/' . $endpoint . '.php');
     copy(__DIR__ . '/../../api/EpayHelper.php', $dir . '/api/EpayHelper.php');
+    copy(__DIR__ . '/../../api/InputGuard.php', $dir . '/api/InputGuard.php');
+    copy(__DIR__ . '/../../api/OrderLock.php', $dir . '/api/OrderLock.php');
 
     if ($failSave) {
         // Exercise the unchanged endpoint with a helper that rejects storage.
@@ -165,20 +167,35 @@ PHP
     return $dir;
 }
 
-function runEndpointFixture($dir)
+function startPhpFixture($file)
 {
     $process = proc_open(
-        [PHP_BINARY, '-n', '-d', 'display_errors=stderr', $dir . '/run.php'],
-        [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+        [PHP_BINARY, '-n', '-d', 'display_errors=stderr', $file],
+        [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
         $pipes
     );
     expect(is_resource($process), 'Could not start endpoint fixture');
+    stream_set_timeout($pipes[1], 5);
+    stream_set_timeout($pipes[2], 5);
+    return [$process, $pipes];
+}
+
+function finishPhpFixture($process, $pipes)
+{
+    fclose($pipes[0]);
     $body = stream_get_contents($pipes[1]);
     $errors = stream_get_contents($pipes[2]);
     fclose($pipes[1]);
     fclose($pipes[2]);
     $exitCode = proc_close($process);
     expect($exitCode === 0 && $errors === '', 'Endpoint fixture failed: ' . $errors);
+    return $body;
+}
+
+function runEndpointFixture($dir)
+{
+    [$process, $pipes] = startPhpFixture($dir . '/run.php');
+    $body = finishPhpFixture($process, $pipes);
     return ['status' => (int) file_get_contents($dir . '/http-status'), 'body' => $body];
 }
 
@@ -282,6 +299,141 @@ try {
         expect(file_get_contents($dir . '/integration-calls') === 'called', 'Integration did not run after saving');
         expect(runEndpointFixture($dir) === ['status' => 200, 'body' => 'success'], 'Replay was rejected');
         expect(file_get_contents($dir . '/integration-calls') === 'called', 'Sequential replay repeated integration');
+    });
+
+    check('concurrent duplicate callbacks send integrations exactly once', function () use ($root) {
+        $dir = createEndpointFixture($root, 'notify-duplicate-race', 'notify', false);
+        $file = $dir . '/logs/orders/RWTESTNOTIFY.json';
+        $helper = file_get_contents($dir . '/api/EpayHelper.php');
+        $helper = str_replace('class EpayHelper', 'class PersistingEpayHelper', $helper);
+        file_put_contents($dir . '/api/EpayHelper.php', $helper . <<<'PHP'
+
+class EpayHelper extends PersistingEpayHelper
+{
+    public function verifySign($params, $sign)
+    {
+        $valid = parent::verifySign($params, $sign);
+        echo "verified\n";
+        flush();
+        return $valid;
+    }
+
+    public function saveOrder($file, array $order)
+    {
+        echo "saving\n";
+        flush();
+        if (fgets(STDIN) !== "save\n") {
+            throw new RuntimeException('Save barrier was not released');
+        }
+        parent::saveOrder($file, $order);
+    }
+}
+PHP
+        );
+
+        $first = $second = null;
+        $firstPipes = $secondPipes = [];
+        try {
+            [$first, $firstPipes] = startPhpFixture($dir . '/run.php');
+            expect(fgets($firstPipes[1]) === "verified\n", 'First callback did not verify its signature');
+            expect(fgets($firstPipes[1]) === "saving\n", 'First callback did not reach the save barrier');
+            [$second, $secondPipes] = startPhpFixture($dir . '/run.php');
+            expect(fgets($secondPipes[1]) === "verified\n", 'Second callback did not verify its signature');
+            fwrite($secondPipes[0], "save\n");
+
+            $read = [$secondPipes[1]];
+            $write = $except = null;
+            expect(stream_select($read, $write, $except, 0, 200000) === 0, 'Duplicate callback bypassed the lock before the first callback saved');
+            expect(json_decode(file_get_contents($file), true)['status'] === 0, 'Paused callback already changed the order');
+            expect(!file_exists($dir . '/integration-calls'), 'Integration ran before the first callback saved');
+
+            fwrite($firstPipes[0], "save\n");
+            expect(finishPhpFixture($first, $firstPipes) === 'success', 'First callback failed');
+            expect(finishPhpFixture($second, $secondPipes) === 'success', 'Duplicate callback failed');
+        } finally {
+            foreach ([$first, $second] as $process) {
+                if (is_resource($process)) {
+                    proc_terminate($process);
+                    proc_close($process);
+                }
+            }
+            foreach (array_merge($firstPipes, $secondPipes) as $pipe) {
+                if (is_resource($pipe)) {
+                    fclose($pipe);
+                }
+            }
+        }
+
+        expect(json_decode(file_get_contents($file), true)['status'] === 1, 'Concurrent callbacks did not persist the paid order');
+        expect(file_get_contents($dir . '/integration-calls') === 'called', 'Concurrent duplicate callbacks repeated integration');
+    });
+
+    check('cleanup waits for an in-flight callback and retains the paid order', function () use ($root) {
+        $dir = createEndpointFixture($root, 'notify-cleanup-race', 'notify', false);
+        $file = $dir . '/logs/orders/RWTESTNOTIFY.json';
+        $pending = json_decode(file_get_contents($file), true);
+        $pending['create_time'] = '2000-01-01 00:00:00';
+        file_put_contents($file, json_encode($pending));
+
+        // Pause the real callback just before its atomic save, while the order
+        // still looks expired and unpaid to an uncoordinated cleaner.
+        $helper = file_get_contents($dir . '/api/EpayHelper.php');
+        $helper = str_replace('class EpayHelper', 'class PersistingEpayHelper', $helper);
+        file_put_contents($dir . '/api/EpayHelper.php', $helper . <<<'PHP'
+
+class EpayHelper extends PersistingEpayHelper
+{
+    public function saveOrder($file, array $order)
+    {
+        echo "saving\n";
+        flush();
+        if (fgets(STDIN) !== "save\n") {
+            throw new RuntimeException('Save barrier was not released');
+        }
+        parent::saveOrder($file, $order);
+    }
+}
+PHP
+        );
+        $cleanupScript = '<?php require ' . var_export(__DIR__ . '/../../scripts/cleanup_orders.php', true) . ';'
+            . 'echo "ready\n"; flush();'
+            . 'echo json_encode(lec_cleanup_orders(__DIR__ . "/logs/orders", 24 * 3600));';
+        file_put_contents($dir . '/cleanup.php', $cleanupScript);
+
+        $callback = $cleaner = null;
+        $callbackPipes = $cleanerPipes = [];
+        try {
+            [$callback, $callbackPipes] = startPhpFixture($dir . '/run.php');
+            expect(fgets($callbackPipes[1]) === "saving\n", 'Callback did not reach the save barrier');
+            [$cleaner, $cleanerPipes] = startPhpFixture($dir . '/cleanup.php');
+            expect(fgets($cleanerPipes[1]) === "ready\n", 'Cleaner did not start');
+
+            $read = [$cleanerPipes[1]];
+            $write = $except = null;
+            expect(stream_select($read, $write, $except, 0, 200000) === 0, 'Cleanup finished before the callback saved');
+            expect(is_file($file), 'Cleanup deleted the in-flight order');
+
+            fwrite($callbackPipes[0], "save\n");
+            expect(finishPhpFixture($callback, $callbackPipes) === 'success', 'Concurrent callback failed');
+            $result = json_decode(finishPhpFixture($cleaner, $cleanerPipes), true);
+            expect($result === ['deleted' => [], 'kept' => 1], 'Cleanup did not re-read the paid order');
+        } finally {
+            foreach ([$callback, $cleaner] as $process) {
+                if (is_resource($process)) {
+                    proc_terminate($process);
+                    proc_close($process);
+                }
+            }
+            foreach (array_merge($callbackPipes, $cleanerPipes) as $pipe) {
+                if (is_resource($pipe)) {
+                    fclose($pipe);
+                }
+            }
+        }
+
+        expect(json_decode(file_get_contents($file), true)['status'] === 1, 'Paid order was removed or reverted');
+        expect(runEndpointFixture($dir) === ['status' => 200, 'body' => 'success'], 'Callback replay could not find the paid order');
+        expect(file_get_contents($dir . '/integration-calls') === 'called', 'Integration was lost or repeated');
     });
 
     check('creation storage failure returns HTTP 500 without payment details', function () use ($root) {
