@@ -165,7 +165,7 @@ PHP
     return $dir;
 }
 
-function runEndpointFixture($dir)
+function startEndpointFixture($dir)
 {
     $process = proc_open(
         [PHP_BINARY, '-n', '-d', 'display_errors=stderr', $dir . '/run.php'],
@@ -173,6 +173,11 @@ function runEndpointFixture($dir)
         $pipes
     );
     expect(is_resource($process), 'Could not start endpoint fixture');
+    return [$process, $pipes];
+}
+
+function finishEndpointFixture($dir, $process, $pipes)
+{
     $body = stream_get_contents($pipes[1]);
     $errors = stream_get_contents($pipes[2]);
     fclose($pipes[1]);
@@ -180,6 +185,12 @@ function runEndpointFixture($dir)
     $exitCode = proc_close($process);
     expect($exitCode === 0 && $errors === '', 'Endpoint fixture failed: ' . $errors);
     return ['status' => (int) file_get_contents($dir . '/http-status'), 'body' => $body];
+}
+
+function runEndpointFixture($dir)
+{
+    [$process, $pipes] = startEndpointFixture($dir);
+    return finishEndpointFixture($dir, $process, $pipes);
 }
 
 function removeFixtureDirectory($dir)
@@ -282,6 +293,62 @@ try {
         expect(file_get_contents($dir . '/integration-calls') === 'called', 'Integration did not run after saving');
         expect(runEndpointFixture($dir) === ['status' => 200, 'body' => 'success'], 'Replay was rejected');
         expect(file_get_contents($dir . '/integration-calls') === 'called', 'Sequential replay repeated integration');
+    });
+
+    check('concurrent callbacks wait for the order lock and send integrations once', function () use ($root) {
+        $dir = createEndpointFixture($root, 'notify-concurrent', 'notify', false);
+        $file = $dir . '/logs/orders/RWTESTNOTIFY.json';
+        $lock = fopen($file . '.lock', 'c');
+        expect($lock !== false && flock($lock, LOCK_EX), 'Could not hold order lock');
+        $children = [];
+        try {
+            $children[] = startEndpointFixture($dir);
+            $children[] = startEndpointFixture($dir);
+            $log = $dir . '/logs/' . date('Y-m-d') . '.log';
+            $deadline = microtime(true) + 5;
+            do {
+                clearstatcache();
+                $received = is_file($log) ? substr_count(file_get_contents($log), '收到回调:') : 0;
+                if ($received === 2) {
+                    break;
+                }
+                usleep(10000);
+            } while (microtime(true) < $deadline);
+            expect($received === 2, 'Both callbacks did not reach notify');
+            $read = [$children[0][1][1], $children[1][1][1]];
+            $write = $except = null;
+            expect(stream_select($read, $write, $except, 0, 200000) === 0, 'Callback bypassed held order lock');
+            expect(json_decode(file_get_contents($file), true)['status'] === 0, 'Order changed while locked');
+            expect(!file_exists($dir . '/integration-calls'), 'Integration ran while order was locked');
+        } finally {
+            flock($lock, LOCK_UN);
+            fclose($lock);
+            $results = [];
+            foreach ($children as [$process, $pipes]) {
+                $results[] = finishEndpointFixture($dir, $process, $pipes);
+            }
+        }
+        expect($results === array_fill(0, 2, ['status' => 200, 'body' => 'success']), 'Concurrent callbacks were rejected');
+        expect(file_get_contents($dir . '/integration-calls') === 'called', 'Concurrent callbacks repeated integration');
+        expect(runEndpointFixture($dir) === ['status' => 200, 'body' => 'success'], 'Paid replay was rejected');
+        expect(file_get_contents($dir . '/integration-calls') === 'called', 'Paid replay repeated integration');
+        expect(glob($dir . '/logs/orders/*.json') === [$file], 'Lock file looks like an order');
+    });
+
+    check('missing order returns fail without integrations', function () use ($root) {
+        $dir = createEndpointFixture($root, 'notify-missing', 'notify', false);
+        unlink($dir . '/logs/orders/RWTESTNOTIFY.json');
+        expect(runEndpointFixture($dir) === ['status' => 200, 'body' => 'fail'], 'Missing order was accepted');
+        expect(!file_exists($dir . '/integration-calls'), 'Missing order triggered integrations');
+    });
+
+    check('lock open failure returns HTTP 500 without changing the order', function () use ($root) {
+        $dir = createEndpointFixture($root, 'notify-lock-failure', 'notify', false);
+        $file = $dir . '/logs/orders/RWTESTNOTIFY.json';
+        mkdir($file . '.lock');
+        expect(runEndpointFixture($dir) === ['status' => 500, 'body' => 'fail'], 'Lock failure was accepted');
+        expect(json_decode(file_get_contents($file), true)['status'] === 0, 'Lock failure changed order');
+        expect(!file_exists($dir . '/integration-calls'), 'Lock failure triggered integrations');
     });
 
     check('creation storage failure returns HTTP 500 without payment details', function () use ($root) {

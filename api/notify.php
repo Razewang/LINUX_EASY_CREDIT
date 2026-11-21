@@ -8,6 +8,7 @@ require_once __DIR__ . '/EpayHelper.php';
 // 加载配置
 $config = require __DIR__ . '/../config/config.php';
 $helper = new EpayHelper($config['epay']);
+$orderLock = null;
 
 try {
     // 获取回调参数
@@ -59,6 +60,11 @@ try {
         exit;
     }
 
+    $orderLock = @fopen($orderFile . '.lock', 'c');
+    if ($orderLock === false || !flock($orderLock, LOCK_EX)) {
+        throw new RuntimeException('订单锁获取失败');
+    }
+
     $orderData = json_decode(file_get_contents($orderFile), true);
 
     // 检查订单是否已处理
@@ -82,6 +88,9 @@ try {
         $orderData['trade_no'] = $tradeNo;
         $orderData['pay_time'] = date('Y-m-d H:i:s');
         $helper->saveOrder($orderFile, $orderData);
+        flock($orderLock, LOCK_UN);
+        fclose($orderLock);
+        $orderLock = null;
 
         $helper->log("订单支付成功: {$outTradeNo}, 金额: {$money}");
 
@@ -113,4 +122,9 @@ try {
     http_response_code(500);
     $helper->log("回调处理异常: " . $e->getMessage(), 'error');
     echo 'fail';
+} finally {
+    if (is_resource($orderLock)) {
+        flock($orderLock, LOCK_UN);
+        fclose($orderLock);
+    }
 }
