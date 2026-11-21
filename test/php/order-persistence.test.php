@@ -301,6 +301,73 @@ try {
         expect(file_get_contents($dir . '/integration-calls') === 'called', 'Sequential replay repeated integration');
     });
 
+    check('concurrent duplicate callbacks send integrations exactly once', function () use ($root) {
+        $dir = createEndpointFixture($root, 'notify-duplicate-race', 'notify', false);
+        $file = $dir . '/logs/orders/RWTESTNOTIFY.json';
+        $helper = file_get_contents($dir . '/api/EpayHelper.php');
+        $helper = str_replace('class EpayHelper', 'class PersistingEpayHelper', $helper);
+        file_put_contents($dir . '/api/EpayHelper.php', $helper . <<<'PHP'
+
+class EpayHelper extends PersistingEpayHelper
+{
+    public function verifySign($params, $sign)
+    {
+        $valid = parent::verifySign($params, $sign);
+        echo "verified\n";
+        flush();
+        return $valid;
+    }
+
+    public function saveOrder($file, array $order)
+    {
+        echo "saving\n";
+        flush();
+        if (fgets(STDIN) !== "save\n") {
+            throw new RuntimeException('Save barrier was not released');
+        }
+        parent::saveOrder($file, $order);
+    }
+}
+PHP
+        );
+
+        $first = $second = null;
+        $firstPipes = $secondPipes = [];
+        try {
+            [$first, $firstPipes] = startPhpFixture($dir . '/run.php');
+            expect(fgets($firstPipes[1]) === "verified\n", 'First callback did not verify its signature');
+            expect(fgets($firstPipes[1]) === "saving\n", 'First callback did not reach the save barrier');
+            [$second, $secondPipes] = startPhpFixture($dir . '/run.php');
+            expect(fgets($secondPipes[1]) === "verified\n", 'Second callback did not verify its signature');
+            fwrite($secondPipes[0], "save\n");
+
+            $read = [$secondPipes[1]];
+            $write = $except = null;
+            expect(stream_select($read, $write, $except, 0, 200000) === 0, 'Duplicate callback bypassed the lock before the first callback saved');
+            expect(json_decode(file_get_contents($file), true)['status'] === 0, 'Paused callback already changed the order');
+            expect(!file_exists($dir . '/integration-calls'), 'Integration ran before the first callback saved');
+
+            fwrite($firstPipes[0], "save\n");
+            expect(finishPhpFixture($first, $firstPipes) === 'success', 'First callback failed');
+            expect(finishPhpFixture($second, $secondPipes) === 'success', 'Duplicate callback failed');
+        } finally {
+            foreach ([$first, $second] as $process) {
+                if (is_resource($process)) {
+                    proc_terminate($process);
+                    proc_close($process);
+                }
+            }
+            foreach (array_merge($firstPipes, $secondPipes) as $pipe) {
+                if (is_resource($pipe)) {
+                    fclose($pipe);
+                }
+            }
+        }
+
+        expect(json_decode(file_get_contents($file), true)['status'] === 1, 'Concurrent callbacks did not persist the paid order');
+        expect(file_get_contents($dir . '/integration-calls') === 'called', 'Concurrent duplicate callbacks repeated integration');
+    });
+
     check('cleanup waits for an in-flight callback and retains the paid order', function () use ($root) {
         $dir = createEndpointFixture($root, 'notify-cleanup-race', 'notify', false);
         $file = $dir . '/logs/orders/RWTESTNOTIFY.json';
